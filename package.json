@@ -1,0 +1,24 @@
+{
+    "name": "sistema-enedes",
+    "version": "1.0.0",
+    "scripts": {
+        "start": "nodemon src/app.ts",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "express-session": "^1.17.3",
+        "mysql2": "^3.6.0",
+        "ejs": "^3.1.9",
+        "bcrypt": "^5.1.1"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.17",
+        "@types/node": "^20.5.9",
+        "@types/express-session": "^1.17.7",
+        "@types/bcrypt": "^5.0.0",
+        "typescript": "^5.2.2",
+        "nodemon": "^3.0.1",
+        "ts-node": "^10.9.1"
+    }
+}
