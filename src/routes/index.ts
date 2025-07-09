@@ -32,5 +32,7 @@ router.get('/action/edit/:id', ActionController.getEditAction);
 router.post('/action/:id', ActionController.updateAction);
 router.get('/action/delete/:id', ActionController.deleteAction);
 router.get('/task/delete/:id', ActionController.deleteTask);
+router.get('/task/edit/:id', ActionController.getEditTask);
+router.post('/task/:id', ActionController.updateTask);
 
 export default router;

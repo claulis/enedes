@@ -7,7 +7,6 @@ export interface Action {
     deadline: Date;
     budget: string;
     status: string;
-    progress: number;
     description: string;
     note: string;
     priority: string;
@@ -26,22 +25,24 @@ export class ActionModel {
         const params: any[] = [];
 
         if (role !== 'admin') {
-            query += ' WHERE section IN (?)';
-            params.push(sections);
+            query += ' WHERE section IN (?) AND created_by = ?';
+            params.push(sections, userId);
+        } else {
+            query += ' WHERE 1=1';
         }
 
         if (filters.section) {
-            query += role === 'admin' ? ' WHERE section = ?' : ' AND section = ?';
+            query += ' AND section = ?';
             params.push(filters.section);
         }
 
-        if (filters.status) {
-            query += role === 'admin' && !filters.section ? ' WHERE status = ?' : ' AND status = ?';
+        if (filters.status && filters.status !== 'Todos') {
+            query += ' AND status = ?';
             params.push(filters.status);
         }
 
         if (filters.search) {
-            query += (role === 'admin' && !filters.section && !filters.status ? ' WHERE' : ' AND') + ' (task LIKE ? OR responsible LIKE ? OR description LIKE ?)';
+            query += ' AND (task LIKE ? OR responsible LIKE ? OR description LIKE ?)';
             const searchTerm = `%${filters.search}%`;
             params.push(searchTerm, searchTerm, searchTerm);
         }
@@ -56,51 +57,73 @@ export class ActionModel {
         return (rows as Action[])[0] || null;
     }
 
-    static async create(action: Partial<Action>, tasks: { description: string, completed: boolean }[]): Promise<number> {
+    static async create(action: Partial<Action>, tasks: { description: string, completed: boolean, order: number }[]): Promise<number> {
         const [result] = await db.query(
-            'INSERT INTO action (task, responsible, deadline, budget, status, progress, description, note, priority, section, completed, validated, created_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO action (task, responsible, deadline, budget, status, description, note, priority, section, completed, validated, created_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
-                action.task, action.responsible, action.deadline, action.budget, action.status, action.progress,
-                action.description, action.note, action.priority, action.section, action.completed, action.validated,
-                action.created_date, action.created_by
+                action.task || '',
+                action.responsible || '',
+                action.deadline || new Date(),
+                action.budget || '',
+                action.status || 'pendente',
+                action.description || '',
+                action.note || '',
+                action.priority || 'medium',
+                action.section || '',
+                action.completed || false,
+                action.validated || false,
+                action.created_date || new Date(),
+                action.created_by || 0
             ]
         );
         const actionId = (result as any).insertId;
 
-        for (let i = 0; i < tasks.length; i++) {
-            await db.query(
-                'INSERT INTO task (action_id, description, completed, `order`) VALUES (?, ?, ?, ?)',
-                [actionId, tasks[i].description, tasks[i].completed, i]
-            );
+        for (const task of tasks) {
+            if (task.description) {
+                await db.query(
+                    'INSERT INTO task (action_id, description, completed, `order`, created_at) VALUES (?, ?, ?, ?, ?)',
+                    [actionId, task.description, task.completed, task.order, new Date()]
+                );
+            }
         }
 
         return actionId;
     }
 
-    static async update(id: number, action: Partial<Action>, tasks: { id?: number, description: string, completed: boolean, order: number }[]): Promise<void> {
+    static async update(id: number, action: Partial<Action>, tasks: { description: string, completed: boolean, order: number }[]): Promise<void> {
         await db.query(
-            'UPDATE action SET task = ?, responsible = ?, deadline = ?, budget = ?, status = ?, progress = ?, description = ?, note = ?, priority = ?, section = ?, completed = ?, validated = ?, created_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            'UPDATE action SET task = ?, responsible = ?, deadline = ?, budget = ?, status = ?, description = ?, note = ?, priority = ?, section = ?, completed = ?, validated = ?, created_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
             [
-                action.task, action.responsible, action.deadline, action.budget, action.status, action.progress,
-                action.description, action.note, action.priority, action.section, action.completed, action.validated,
-                action.created_date, id
+                action.task || '',
+                action.responsible || '',
+                action.deadline || new Date(),
+                action.budget || '',
+                action.status || 'pendente',
+                action.description || '',
+                action.note || '',
+                action.priority || 'medium',
+                action.section || '',
+                action.completed || false,
+                action.validated || false,
+                action.created_date || new Date(),
+                id
             ]
         );
 
-        // Delete existing tasks
         await db.query('DELETE FROM task WHERE action_id = ?', [id]);
 
-        // Insert updated tasks
-        for (let i = 0; i < tasks.length; i++) {
-            await db.query(
-                'INSERT INTO task (action_id, description, completed, `order`) VALUES (?, ?, ?, ?)',
-                [id, tasks[i].description, tasks[i].completed, i]
-            );
+        for (const task of tasks) {
+            if (task.description) {
+                await db.query(
+                    'INSERT INTO task (action_id, description, completed, `order`, created_at) VALUES (?, ?, ?, ?, ?)',
+                    [id, task.description, task.completed, task.order, new Date()]
+                );
+            }
         }
     }
 
     static async delete(id: number): Promise<void> {
+        await db.query('DELETE FROM task WHERE action_id = ?', [id]);
         await db.query('DELETE FROM action WHERE id = ?', [id]);
-        // Tasks are deleted automatically via ON DELETE CASCADE
     }
 }

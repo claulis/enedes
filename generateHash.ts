@@ -1,8 +1,17 @@
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 
-async function generateHash(password: string) {
-    const hash = await bcrypt.hash(password, 10);
-    console.log(hash);
+const password = process.argv[2]; // Recebe a senha como argumento da linha de comando
+const saltRounds = 10;
+
+if (!password) {
+    console.error('Por favor, forneça uma senha como argumento.');
+    process.exit(1);
 }
 
-generateHash('123456');
+bcrypt.hash(password, saltRounds, (err, hash) => {
+    if (err) {
+        console.error('Erro ao gerar hash:', err);
+        process.exit(1);
+    }
+    console.log('Hash gerado:', hash);
+});

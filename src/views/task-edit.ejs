@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Tarefa - Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <header class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Sistema ENEDES</h1>
+            <nav>
+                <a href="/dashboard" class="mr-4 hover:underline">📊 Dashboard</a>
+                <a href="/export" class="mr-4 hover:underline">📥 Exportar</a>
+                <a href="/logout" class="hover:underline">🚪 Sair</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-6">
+        <h2 class="text-2xl font-bold mb-4">Editar Tarefa</h2>
+
+        <% if (task) { %>
+            <form action="/task/<%= task.id %>" method="POST" class="bg-white p-6 rounded-lg shadow-md">
+                <div class="mb-4">
+                    <label for="description" class="block text-gray-700 font-bold mb-2">Descrição *</label>
+                    <textarea id="description" name="description" class="w-full p-2 border rounded" required><%= task.description %></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label for="completed" class="block text-gray-700 font-bold mb-2">Concluída</label>
+                    <input type="checkbox" id="completed" name="completed" <%= task.completed ? 'checked' : '' %>>
+                </div>
+
+                <div class="flex justify-end">
+                    <a href="/dashboard" class="bg-gray-500 text-white px-4 py-2 rounded mr-2 hover:bg-gray-600">Cancelar</a>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Salvar Tarefa</button>
+                </div>
+            </form>
+        <% } else { %>
+            <p class="text-red-500">Tarefa não encontrada.</p>
+        <% } %>
+    </main>
+</body>
+</html>
