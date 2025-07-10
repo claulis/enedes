@@ -1,38 +1,110 @@
 import express, { Router, Request, Response } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import { ActionController } from '../controllers/ActionController';
-import { UserModel } from '../models/Users';
-import { dbConfig } from '../config/database';
-import mysql from 'mysql2/promise';
+import { FollowUpController } from '../controllers/FollowUpController';
+import { TaskAssignmentController } from '../controllers/TaskAssignmentController';
+import { User } from '../models/Users';
+import { db } from '../app';
+import { upload } from '../config/filestorage';
+import { ActionAttachmentModel } from '../models/ActionAttachments';
+import { FollowUpAttachmentModel } from '../models/FolloUpAttachments';
+import path from 'path';
 
 const router: Router = express.Router();
 
 router.get('/', async (req: Request, res: Response) => {
-    const connection = await mysql.createConnection(dbConfig);
-    const [users] = await connection.query('SELECT username, name FROM user WHERE is_active = 1');
-    await connection.end();
-    res.render('login', { users, error: null });
+    try {
+        const [users] = await db.query('SELECT username, name FROM users WHERE is_active = 1');
+        res.render('login', { users, error: null });
+    } catch (error) {
+        console.error('Error fetching users for login:', error);
+        res.render('login', { users: [], error: 'Erro ao carregar lista de usuários.' });
+    }
 });
 
 router.post('/login', AuthController.login);
 router.get('/logout', AuthController.logout);
 router.get('/dashboard', ActionController.getDashboard);
-router.get('/action/new', async (req: Request, res: Response) => {   
-    const user = req.session.user;
-    if (!user) return res.redirect('/');
-    const sections = user.role === 'admin' ? [
-        'Cronograma de Execução', 'Metas ENEDES', 'Lab Consumer', 'Lab Varejo',
-        'IFB Mais Empreendedor', 'Rota Empreendedora', 'Estúdio', 'Sala Interativa',
-        'Agência de Marketing'
-    ] : JSON.parse(user.sections);
-    res.render('action-form', { sections });
-});
-router.post('/action', ActionController.createAction);
+router.get('/action/new', ActionController.getNewAction);
+router.post('/action', upload.array('attachments'), ActionController.createAction);
 router.get('/action/edit/:id', ActionController.getEditAction);
-router.post('/action/:id', ActionController.updateAction);
+router.post('/action/:id', upload.array('attachments'), ActionController.updateAction);
 router.get('/action/delete/:id', ActionController.deleteAction);
-router.get('/task/delete/:id', ActionController.deleteTask);
 router.get('/task/edit/:id', ActionController.getEditTask);
+router.get('/task/delete/:id', ActionController.deleteTask);
 router.post('/task/:id', ActionController.updateTask);
+router.get('/follow-up/new/:actionId', FollowUpController.getNewFollowUp);
+router.post('/createFollowUp', FollowUpController.createFollowUp);
+router.get('/follow-up/edit/:id', FollowUpController.getEditFollowUp);
+router.post('/follow-up/:id', FollowUpController.updateFollowUp);
+router.get('/follow-up/delete/:id', FollowUpController.deleteFollowUp);
+router.get('/follow-up/:id', FollowUpController.getFollowUp);
+router.get('/task-assignment/new/:actionId', TaskAssignmentController.getNewTaskAssignment);
+router.post('/task-assignment', TaskAssignmentController.createTaskAssignment);
+router.get('/task-assignment/edit/:id', TaskAssignmentController.getEditTaskAssignment);
+router.post('/task-assignment/:id', TaskAssignmentController.updateTaskAssignment);
+router.get('/task-assignment/delete/:id', TaskAssignmentController.deleteTaskAssignment);
+router.get('/attachment/action/:id', async (req: Request, res: Response) => {
+    const attachmentId = parseInt(req.params.id);
+    try {
+        const attachment = await ActionAttachmentModel.findById(attachmentId);
+        if (!attachment || !attachment.file_path) {
+            return res.status(404).send('Anexo não encontrado.');
+        }
+        res.sendFile(path.resolve(attachment.file_path));
+    } catch (error) {
+        console.error('Error downloading attachment:', error);
+        res.status(500).send('Erro ao baixar anexo.');
+    }
+});
+router.get('/attachment/follow-up/:id', async (req: Request, res: Response) => {
+    const attachmentId = parseInt(req.params.id);
+    try {
+        const attachment = await FollowUpAttachmentModel.findById(attachmentId);
+        if (!attachment || !attachment.file_path) {
+            return res.status(404).send('Anexo não encontrado.');
+        }
+        res.sendFile(path.resolve(attachment.file_path));
+    } catch (error) {
+        console.error('Error downloading attachment:', error);
+        res.status(500).send('Erro ao baixar anexo.');
+    }
+});
+router.get('/attachment/delete/action/:id', async (req: Request, res: Response) => {
+    const user: User | undefined = req.session.user;
+    if (!user) {
+        return res.redirect('/');
+    }
+    const attachmentId = parseInt(req.params.id);
+    try {
+        const attachment = await ActionAttachmentModel.findById(attachmentId);
+        if (!attachment) {
+            return res.redirect('/dashboard');
+        }
+        await ActionAttachmentModel.delete(attachmentId);
+        res.redirect(`/action/edit/${attachment.action_id}`);
+    } catch (error) {
+        console.error('Error deleting attachment:', error);
+        res.redirect('/dashboard');
+    }
+});
+router.get('/attachment/delete/follow-up/:id', async (req: Request, res: Response) => {
+    const user: User | undefined = req.session.user;
+    if (!user) {
+        return res.redirect('/');
+    }
+    const attachmentId = parseInt(req.params.id);
+    try {
+        const attachment = await FollowUpAttachmentModel.findById(attachmentId);
+        if (!attachment) {
+            return res.redirect('/dashboard');
+        }
+        await FollowUpAttachmentModel.delete(attachmentId);
+        res.redirect(`/follow-up/edit/${attachment.follow_up_id}`);
+    } catch (error) {
+        console.error('Error deleting attachment:', error);
+        res.redirect('/dashboard');
+    }
+});
 
 export default router;

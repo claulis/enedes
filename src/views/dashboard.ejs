@@ -3,108 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema ENEDES - Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <script>
-        function confirmDelete(message, url) {
-            if (confirm(message)) {
-                window.location.href = url;
-            }
-        }
-    </script>
+    <title>Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-white">
-    <header class="bg-primary text-white text-center py-3 shadow-sm">
-        <div class="container">
-            <h1 class="display-5 fw-bold">Sistema ENEDES</h1>
-            <nav class="mt-2 d-flex justify-content-center flex-wrap gap-2">
-                <a href="/export" class="btn btn-outline-light btn-sm">📥 Exportar</a>
-                <a href="/logout" class="btn btn-outline-light btn-sm">🚪 Sair</a>
+<body class="bg-gray-100">
+    <header class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Sistema ENEDES</h1>
+            <nav>
+                <a href="/export" class="mr-4">📥 Exportar</a>
+                <a href="/logout" class="mr-4">🚪 Sair</a>
             </nav>
         </div>
     </header>
-    <main class="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
-        <div class="p-4 rounded-3 shadow bg-white border border-primary border-opacity-50 w-100" style="max-width: 1200px;">
-            <div class="card p-4 mb-4 shadow-sm bg-white border border-primary border-opacity-50">
-                <h3 class="mb-4 fw-bold text-dark">Filtros</h3>
-                <form action="/dashboard" method="GET" class="row g-3 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label for="section" class="form-label text-dark">Seção</label>
-                        <select name="section" id="section" class="form-select form-select-sm">
-                            <option value="">Selecione uma seção...</option>
-                            <% sections.forEach(section => { %>
-                                <option value="<%= section %>" <%= filters.section === section ? 'selected' : '' %>><%= section %></option>
-                            <% }); %>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label for="status" class="form-label text-dark">Status</label>
-                        <select name="status" id="status" class="form-select form-select-sm">
-                            <option value="" <%= !filters.status ? 'selected' : '' %>>Todos</option>
-                            <option value="em_andamento" <%= filters.status === 'em_andamento' ? 'selected' : '' %>>Em Andamento</option>
-                            <option value="concluida" <%= filters.status === 'concluida' ? 'selected' : '' %>>Concluída</option>
-                            <option value="pendente" <%= filters.status === 'pendente' ? 'selected' : '' %>>Pendente</option>
-                            <option value="alerta" <%= filters.status === 'alerta' ? 'selected' : '' %>>Alerta</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label for="search" class="form-label text-dark">Buscar</label>
-                        <input type="text" name="search" id="search" class="form-control form-control-sm" placeholder="🔍 Buscar por tarefa ou responsável" value="<%= filters.search || '' %>">
-                    </div>
-                    <div class="col-12 col-md-2">
-                        <button type="submit" class="btn btn-primary btn-sm w-100">Filtrar</button>
-                    </div>
-                </form>
+
+    <main class="container mx-auto mt-8 p-4">
+        <% if (error) { %>
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                <%= error %>
             </div>
-            <div class="actions-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold text-dark">Ações</h2>
-                    <a href="/action/new" class="btn btn-primary btn-sm">Nova Ação</a>
-                </div>
-                <% if (actions.length === 0) { %>
-                    <div class="alert alert-info text-center" role="alert">
-                        Nenhuma ação encontrada.
-                    </div>
-                <% } else { %>
-                    <div class="row">
-                        <% actions.forEach(action => { %>
-                            <div class="col-12 col-md-6 col-lg-4 mb-4">
-                                <div class="card h-100 shadow-sm bg-white border border-primary border-opacity-50">
-                                    <div class="card-body">
-                                        <h3 class="card-title fs-5 fw-bold text-dark"><%= action.task %></h3>
-                                        <p class="card-text"><strong>Responsável:</strong> <%= action.responsible %></p>
-                                        <p class="card-text"><strong>Seção:</strong> <%= action.section %></p>
-                                        <p class="card-text"><strong>Status:</strong> <span class="badge <%= action.status === 'concluida' ? 'bg-primary' : action.status === 'em_andamento' ? 'bg-info' : action.status === 'alerta' ? 'bg-warning' : 'bg-danger' %>"><%= action.status %></span></p>
-                                        <p class="card-text"><strong>Deadline:</strong> <%= action.deadline.toISOString().split('T')[0] %></p>
-                                        <h4 class="mt-3 fs-6 text-dark">Tarefas:</h4>
-                                        <ul class="list-group list-group-flush">
-                                            <% action.tasks.forEach(task => { %>
-    <li class="ml-2">
-        <a href="/task/edit/<%= task.id %>" class="text-blue-500 hover:underline">
-            <%= task.description %>
-        </a>
-        <span class="<%= task.completed ? 'text-green-500' : 'text-red-500' %>">
-            <%= task.completed ? '✔' : '⏳' %>
-        </span>
-        <a href="/task/delete/<%= task.id %>" class="text-red-500 hover:underline">Excluir</a>
-    </li>
-<% }) %>
-                                        </ul>
-                                        <div class="mt-3 d-flex gap-2">
-                                            <a href="/action/edit/<%= action.id %>" class="btn btn-warning btn-sm">Editar</a>
-                                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('Tem certeza que deseja excluir esta ação?', '/action/delete/<%= action.id %>')">Excluir</button>
+        <% } %>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white p-4 rounded shadow">
+                <h3 class="text-lg font-semibold mb-2">Ações Totais</h3>
+                <p class="text-2xl font-bold"><%= stats ? stats.total_actions : 0 %></p>
+            </div>
+            <div class="bg-white p-4 rounded shadow">
+                <h3 class="text-lg font-semibold mb-2">Ações Concluídas</h3>
+                <p class="text-2xl font-bold"><%= stats ? stats.completed_actions : 0 %></p>
+            </div>
+            <div class="bg-white p-4 rounded shadow">
+                <h3 class="text-lg font-semibold mb-2">Notificações Não Lidas</h3>
+                <p class="text-2xl font-bold"><%= stats ? stats.unread_notifications : 0 %></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+                <h2 class="text-2xl font-bold mb-4">Notificações</h2>
+                <div class="bg-white p-6 rounded shadow">
+                    <% if (notifications && notifications.length > 0) { %>
+                        <ul class="space-y-4">
+                            <% notifications.forEach(notification => { %>
+                                <li class="border-b pb-4">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <p class="font-semibold"><%= notification.title %></p>
+                                            <p class="text-gray-600"><%= notification.message %></p>
                                         </div>
+                                        <a href="/notification/mark-read/<%= notification.id %>" class="text-blue-600 hover:underline">Marcar como lida</a>
                                     </div>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <p>Nenhuma notificação.</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold mb-4">Filtros</h2>
+                <div class="bg-white p-6 rounded shadow">
+                    <form action="/dashboard" method="GET">
+                        <div class="mb-4">
+                            <label for="section" class="block text-gray-700 font-bold">Seção</label>
+                            <select name="section" id="section" class="w-full p-2 border rounded">
+                                <option value="">Selecione uma seção...</option>
+                                <% sections.forEach(section => { %>
+                                    <option value="<%= section %>" <%= filters.section === section ? 'selected' : '' %>><%= section %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="status" class="block text-gray-700 font-bold">Status</label>
+                            <select name="status" id="status" class="w-full p-2 border rounded">
+                                <option value="">Todos</option>
+                                <option value="pendente" <%= filters.status === 'pendente' ? 'selected' : '' %>>Pendente</option>
+                                <option value="em_andamento" <%= filters.status === 'em_andamento' ? 'selected' : '' %>>Em Andamento</option>
+                                <option value="alerta" <%= filters.status === 'alerta' ? 'selected' : '' %>>Alerta</option>
+                                <option value="concluida" <%= filters.status === 'concluida' ? 'selected' : '' %>>Concluída</option>
+                                <option value="atrasado" <%= filters.status === 'atrasado' ? 'selected' : '' %>>Atrasado</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="priority" class="block text-gray-700 font-bold">Prioridade</label>
+                            <select name="priority" id="priority" class="w-full p-2 border rounded">
+                                <option value="">Todos</option>
+                                <option value="low" <%= filters.priority === 'low' ? 'selected' : '' %>>Baixa</option>
+                                <option value="medium" <%= filters.priority === 'medium' ? 'selected' : '' %>>Média</option>
+                                <option value="high" <%= filters.priority === 'high' ? 'selected' : '' %>>Alta</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="search" class="block text-gray-700 font-bold">Buscar</label>
+                            <input type="text" name="search" id="search" value="<%= filters.search || '' %>" class="w-full p-2 border rounded" placeholder="Digite para buscar...">
+                        </div>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filtrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Ações</h2>
+                <a href="/action/new" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Nova Ação</a>
+            </div>
+            <div class="bg-white p-6 rounded shadow">
+                <% if (actions && actions.length > 0) { %>
+                    <div class="space-y-4">
+                        <% actions.forEach(action => { %>
+                            <div class="border p-4 rounded">
+                                <h3 class="text-lg font-semibold mb-2">
+                                    <a href="/action/edit/<%= action.id %>" class="text-blue-600 hover:underline"><%= action.task %></a>
+                                </h3>
+                                <p>Responsável: <%= action.responsible %></p>
+                                <p>Seção: <%= action.section_name %></p>
+                                <p>Status: 
+                                    <span class="px-2 py-1 rounded text-white <%= action.status === 'concluida' ? 'bg-green-600' : action.status === 'alerta' ? 'bg-yellow-600' : action.status === 'atrasado' ? 'bg-red-600' : action.status === 'em_andamento' ? 'bg-blue-600' : 'bg-gray-600' %>">
+                                        <%= action.status %>
+                                    </span>
+                                </p>
+                                <p>Prazo: <%= new Date(action.deadline).toLocaleDateString('pt-BR') %></p>
+                                <p>Progresso: <%= action.progress %>%</p>
+                                <h3 class="text-lg font-semibold mb-2">Tarefas:</h3>
+                                <% if (action.tasks && action.tasks.length > 0) { %>
+                                    <ul class="list-disc pl-5">
+                                        <% action.tasks.forEach(task => { %>
+                                            <li>
+                                                <input type="checkbox" <%= task.completed ? 'checked' : '' %> disabled>
+                                                <%= task.description %>
+                                            </li>
+                                        <% }) %>
+                                    </ul>
+                                <% } else { %>
+                                    <p>Nenhuma tarefa.</p>
+                                <% } %>
+                                <h3 class="text-lg font-semibold mb-2">Anexos:</h3>
+                                <% if (action.attachments && action.attachments.length > 0) { %>
+                                    <ul class="list-disc pl-5">
+                                        <% action.attachments.forEach(attachment => { %>
+                                            <li>
+                                                <a href="/attachment/action/<%= attachment.id %>" class="text-blue-600 hover:underline"><%= attachment.original_name %></a>
+                                            </li>
+                                        <% }) %>
+                                    </ul>
+                                <% } else { %>
+                                    <p>Nenhum anexo.</p>
+                                <% } %>
+                                <h3 class="text-lg font-semibold mb-2">Follow-ups:</h3>
+                                <% if (action.followUps && action.followUps.length > 0) { %>
+                                    <ul class="list-disc pl-5">
+                                        <% action.followUps.forEach(followUp => { %>
+                                            <li>
+                                                <a href="/follow-up/<%= followUp.id %>" class="text-blue-600 hover:underline"><%= followUp.title %></a>
+                                            </li>
+                                        <% }) %>
+                                    </ul>
+                                <% } else { %>
+                                    <p>Nenhum follow-up.</p>
+                                <% } %>
+                                <h3 class="text-lg font-semibold mb-2">Atribuições:</h3>
+                                <% if (action.assignments && action.assignments.length > 0) { %>
+                                    <ul class="list-disc pl-5">
+                                        <% action.assignments.forEach(assignment => { %>
+                                            <li>
+                                                <%= assignment.status %> - 
+                                                <%= assignment.collaborator_name || 'Colaborador ID: ' + assignment.collaborator_id %> 
+                                                (<%= assignment.task_description || 'Tarefa ID: ' + assignment.task_id %>)
+                                            </li>
+                                        <% }) %>
+                                    </ul>
+                                <% } else { %>
+                                    <p>Nenhuma atribuição.</p>
+                                <% } %>
+                                <div class="mt-4 flex space-x-4">
+                                    <a href="/action/edit/<%= action.id %>" class="text-blue-600 hover:underline">Editar</a>
+                                    <a href="/action/delete/<%= action.id %>" class="text-red-600 hover:underline" onclick="return confirm('Tem certeza que deseja excluir esta ação?')">Excluir</a>
                                 </div>
                             </div>
-                        <% }); %>
+                        <% }) %>
                     </div>
+                <% } else { %>
+                    <p>Nenhuma ação encontrada.</p>
                 <% } %>
             </div>
         </div>
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 </body>
 </html>

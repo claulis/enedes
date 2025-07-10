@@ -5,31 +5,30 @@ export interface Task {
     action_id: number;
     description: string;
     completed: boolean;
-    order: number;
+    order_index: number;
     created_at: Date;
+    updated_at: Date;
 }
 
 export class TaskModel {
-    static async findByActionId(actionId
-
-: number): Promise<Task[]> {
-        const [rows] = await db.query('SELECT * FROM task WHERE action_id = ? ORDER BY `order`', [actionId]);
+    static async findByActionId(actionId: number): Promise<Task[]> {
+        const [rows] = await db.query('SELECT * FROM action_tasks WHERE action_id = ? ORDER BY order_index', [actionId]);
         return rows as Task[];
     }
 
     static async findById(id: number): Promise<Task | null> {
-        const [rows] = await db.query('SELECT * FROM task WHERE id = ?', [id]);
+        const [rows] = await db.query('SELECT * FROM action_tasks WHERE id = ?', [id]);
         return (rows as Task[])[0] || null;
     }
 
     static async update(id: number, task: Partial<Task>): Promise<void> {
         await db.query(
-            'UPDATE task SET description = ?, completed = ? WHERE id = ?',
-            [task.description,	task.completed, id]
+            'UPDATE action_tasks SET description = ?, completed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [task.description, task.completed, id]
         );
     }
 
     static async delete(id: number): Promise<void> {
-        await db.query('DELETE FROM task WHERE id = ?', [id]);
+        await db.query('DELETE FROM action_tasks WHERE id = ?', [id]);
     }
 }
