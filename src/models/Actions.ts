@@ -21,6 +21,13 @@ export interface Action {
     section_name?: string;
 }
 
+export interface TaskData {
+    id?: number;
+    description: string;
+    completed: boolean;
+    order_index: number;
+}
+
 export class ActionModel {
     static async findAll(userId: number, role: string, sections: string[], filters: { section?: string; status?: string; priority?: string; search?: string }): Promise<Action[]> {
         let query = `
@@ -73,7 +80,7 @@ export class ActionModel {
         return (rows as Action[])[0] || null;
     }
 
-    static async create(action: Partial<Action>, tasks: { description: string; completed: boolean; order_index: number }[]): Promise<number> {
+    static async create(action: Partial<Action>, tasks: TaskData[]): Promise<number> {
         const [result] = await db.query(
             `
             INSERT INTO actions (section_id, task, description, responsible, budget, deadline, priority, status, progress, completed, validated, note, created_by)
@@ -98,10 +105,10 @@ export class ActionModel {
         const actionId = (result as any).insertId;
 
         for (const task of tasks) {
-            if (task.description) {
+            if (task.description && task.description.trim()) {
                 await db.query(
                     'INSERT INTO action_tasks (action_id, description, completed, order_index, created_at) VALUES (?, ?, ?, ?, ?)',
-                    [actionId, task.description, task.completed, task.order_index, new Date()]
+                    [actionId, task.description.trim(), task.completed, task.order_index, new Date()]
                 );
             }
         }
@@ -109,7 +116,7 @@ export class ActionModel {
         return actionId;
     }
 
-    static async update(id: number, action: Partial<Action>, tasks: { description: string; completed: boolean; order_index: number }[]): Promise<void> {
+    static async update(id: number, action: Partial<Action>, tasks: TaskData[]): Promise<void> {
         await db.query(
             `
             UPDATE actions
@@ -133,14 +140,33 @@ export class ActionModel {
             ]
         );
 
-        await db.query('DELETE FROM action_tasks WHERE action_id = ?', [id]);
+        // Buscar tarefas existentes no banco
+        const existingTasks = await TaskModel.findByActionId(id);
+        const existingTaskIds = existingTasks.map(task => task.id);
+        const submittedTaskIds = tasks.filter(task => task.id).map(task => task.id!);
 
+        // Excluir tarefas que não estão no formulário
+        const tasksToDelete = existingTaskIds.filter(id => !submittedTaskIds.includes(id));
+        for (const taskId of tasksToDelete) {
+            await db.query('DELETE FROM action_tasks WHERE id = ?', [taskId]);
+        }
+
+        // Atualizar ou inserir tarefas
         for (const task of tasks) {
-            if (task.description) {
-                await db.query(
-                    'INSERT INTO action_tasks (action_id, description, completed, order_index, created_at) VALUES (?, ?, ?, ?, ?)',
-                    [id, task.description, task.completed, task.order_index, new Date()]
-                );
+            if (task.description && task.description.trim()) {
+                if (task.id) {
+                    // Atualizar tarefa existente
+                    await db.query(
+                        'UPDATE action_tasks SET description = ?, completed = ?, order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                        [task.description.trim(), task.completed, task.order_index, task.id]
+                    );
+                } else {
+                    // Inserir nova tarefa
+                    await db.query(
+                        'INSERT INTO action_tasks (action_id, description, completed, order_index, created_at) VALUES (?, ?, ?, ?, ?)',
+                        [id, task.description.trim(), task.completed, task.order_index, new Date()]
+                    );
+                }
             }
         }
     }

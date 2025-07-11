@@ -1,3 +1,4 @@
+
 import { Request, Response } from 'express';
 import { ActionModel, Action } from '../models/Actions';
 import { TaskModel } from '../models/Tasks';
@@ -114,17 +115,18 @@ export class ActionController {
             if (!sectionResult[0]) throw new Error('Seção inválida');
 
             const tasksData = Array.isArray(tasks) ? tasks.map((t: any, i: number) => ({
+                id: t.id ? parseInt(t.id) : undefined,
                 description: t.description || '',
                 completed: t.completed === 'on' || t.completed === true,
                 order_index: i
-            })).filter(t => t.description) : [];
+            })).filter(t => t.description.trim()) : [];
 
             const action: Partial<Action> = {
                 section_id: sectionResult[0].id,
                 task,
                 responsible,
                 deadline: new Date(deadline),
-                budget: budget || -1,
+                budget: budget || null,
                 status: status || 'pendente',
                 description: description || null,
                 note: note || null,
@@ -205,17 +207,18 @@ export class ActionController {
             if (!sectionResult[0]) throw new Error('Seção inválida');
 
             const tasksData = Array.isArray(tasks) ? tasks.map((t: any, i: number) => ({
+                id: t.id ? parseInt(t.id) : undefined,
                 description: t.description || '',
                 completed: t.completed === 'on' || t.completed === true,
                 order_index: i
-            })).filter(t => t.description) : [];
+            })).filter(t => t.description.trim()) : [];
 
             const action: Partial<Action> = {
                 section_id: sectionResult[0].id,
                 task,
                 responsible,
                 deadline: new Date(deadline),
-                budget: budget || -1,
+                budget: budget || null,
                 status: status || 'pendente',
                 description: description || null,
                 note: note || null,
