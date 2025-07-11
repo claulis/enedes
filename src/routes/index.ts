@@ -4,6 +4,7 @@ import { ActionController } from '../controllers/ActionController';
 import { FollowUpController } from '../controllers/FollowUpController';
 import { TaskAssignmentController } from '../controllers/TaskAssignmentController';
 import { NotificationController } from '../controllers/NotificationController';
+import { CollaboratorController} from '../controllers/CollaboratorController';
 import { User } from '../models/Users';
 import { db } from '../app';
 import { upload } from '../config/filestorage';
@@ -51,6 +52,10 @@ router.get('/notification/new', NotificationController.getNewNotification);
 router.get('/notifications', NotificationController.getNotifications);
 router.post('/notifications/update', NotificationController.updateNotifications);
 router.get('/notification/delete/:id', NotificationController.deleteNotification);
+router.get('/collaborators', CollaboratorController.getCollaborators);
+router.post('/collaborators', CollaboratorController.createCollaborator);
+router.post('/collaborators/:id', CollaboratorController.updateCollaborator);
+router.get('/collaborators/delete/:id', CollaboratorController.deleteCollaborator);
 router.get('/attachment/action/:id', async (req: Request, res: Response) => {
     const attachmentId = parseInt(req.params.id);
     try {

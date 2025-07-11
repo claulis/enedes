@@ -15,7 +15,7 @@ export interface Collaborator {
 
 export class CollaboratorModel {
     static async findAll(): Promise<Collaborator[]> {
-        const [rows] = await db.query('SELECT * FROM collaborators WHERE is_active = 1');
+        const [rows] = await db.query('SELECT * FROM collaborators');
         return (rows as Collaborator[]).map(row => ({
             ...row,
             skills: row.skills ? JSON.parse(row.skills as any) : null
