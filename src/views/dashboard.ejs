@@ -97,22 +97,46 @@
         </section>
 
         <!-- Notifications Section (Horizontal Layout) -->
-        <section class="bg-blue-100 mb-6">
-            <h2 class="text-xl font-semibold mb-2">Notificações</h2>
-            <% if (notifications.length > 0) { %>
-                <div class="flex flex-row space-x-4 overflow-x-auto pb-4">
-                    <% notifications.forEach(notification => { %>
-                        <div class="bg-white p-4 rounded-lg shadow flex-shrink-0 w-64">
-                            <p class="font-semibold"><%= notification.title %></p>
-                            <p class="text-sm text-gray-600"><%= notification.message %></p>
-                            <a href="/notification/read/<%= notification.id %>" class="text-blue-600 hover:underline text-sm">Marcar como lida</a>
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <details class="group">
+                <summary class="flex justify-between items-center cursor-pointer p-4 bg-gray-200 rounded-lg">
+                    <h2 class="text-xl font-semibold">Notificações</h2>
+                    <span class="group-open:rotate-180">▼</span>
+                </summary>
+                <div class="mt-4">
+                    <% if (notifications && notifications.length > 0) { %>
+                        <div class="space-y-2">
+                            <% notifications.forEach(notification => { %>
+                                <div class="<% if (notification.type === 'error') { %>bg-red-100 border-l-4 border-red-500<% } else if (notification.type === 'warning') { %>bg-blue-100 border-l-4 border-blue-500<% } else if (notification.type === 'success') { %>bg-green-100 border-l-4 border-green-500<% } else { %>bg-gray-100 border-l-4 border-gray-500<% } %> p-4 rounded-r-lg flex items-center">
+                                    <span class="mr-2 text-lg">
+                                        <% if (notification.type === 'error') { %>
+                                            <span class="text-red-500">✗</span>
+                                        <% } else if (notification.type === 'warning') { %>
+                                            <span class="text-blue-500">!</span>
+                                        <% } else if (notification.type === 'success') { %>
+                                            <span class="text-green-500">✓</span>
+                                        <% } else { %>
+                                            <span class="text-gray-500">ℹ</span>
+                                        <% } %>
+                                    </span>
+                                    <div>
+                                        <strong><%= notification.title %>:</strong> <%= notification.message %>
+                                        <% if (!notification.is_read) { %>
+                                            <a href="/notification/mark-read/<%= notification.id %>" class="text-blue-500 hover:underline ml-2">Marcar como lida</a>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }) %>
                         </div>
-                    <% }); %>
+                    <% } else { %>
+                        <p class="text-gray-600">Nenhuma notificação.</p>
+                    <% } %>
                 </div>
-            <% } else { %>
-                <p class="text-gray-600">Nenhuma notificação.</p>
-            <% } %>
-        </section>
+            </details>
+            <div class="flex justify-end mt-4">
+                <a href="/notifications" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Gerenciar Notificações</a>
+            </div>
+        </div>
 
         <!-- Actions Section -->
         <section>
@@ -213,5 +237,35 @@
             <% } %>
         </section>
     </main>
+    <script>
+     document.addEventListener('DOMContentLoaded', () => {
+    const checkboxes = document.querySelectorAll('.mark-read-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', async (event) => {
+            const notificationId = event.target.getAttribute('data-notification-id');
+            try {
+                const response = await fetch(`/notification/mark-read/${notificationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const result = await response.json();
+                if (result.success) {
+                    event.target.disabled = true;
+                    event.target.closest('.list-group-item').classList.add('text-muted');
+                } else {
+                    alert('Erro ao marcar como lida: ' + result.message);
+                    event.target.checked = false; // Revert checkbox
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+                alert('Erro ao marcar como lida.');
+                event.target.checked = false; // Revert checkbox
+            }
+        });
+    });
+});
+    </script>
 </body>
 </html>

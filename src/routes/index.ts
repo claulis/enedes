@@ -3,6 +3,7 @@ import { AuthController } from '../controllers/AuthController';
 import { ActionController } from '../controllers/ActionController';
 import { FollowUpController } from '../controllers/FollowUpController';
 import { TaskAssignmentController } from '../controllers/TaskAssignmentController';
+import { NotificationController } from '../controllers/NotificationController';
 import { User } from '../models/Users';
 import { db } from '../app';
 import { upload } from '../config/filestorage';
@@ -44,6 +45,12 @@ router.post('/task-assignment', TaskAssignmentController.createTaskAssignment);
 router.get('/task-assignment/edit/:id', TaskAssignmentController.getEditTaskAssignment);
 router.post('/task-assignment/:id', TaskAssignmentController.updateTaskAssignment);
 router.get('/task-assignment/delete/:id', TaskAssignmentController.deleteTaskAssignment);
+router.post('/notification/mark-read/:id', NotificationController.markAsRead);
+router.post('/notification/create', NotificationController.createNotification);
+router.get('/notification/new', NotificationController.getNewNotification);
+router.get('/notifications', NotificationController.getNotifications);
+router.post('/notifications/update', NotificationController.updateNotifications);
+router.get('/notification/delete/:id', NotificationController.deleteNotification);
 router.get('/attachment/action/:id', async (req: Request, res: Response) => {
     const attachmentId = parseInt(req.params.id);
     try {

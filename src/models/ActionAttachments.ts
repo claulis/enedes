@@ -14,6 +14,11 @@ export interface ActionAttachment {
 
 export class ActionAttachmentModel {
     static async create(attachment: Partial<ActionAttachment>): Promise<number> {
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
+        if (attachment.file_size && attachment.file_size > MAX_FILE_SIZE) {
+            throw new Error('O arquivo excede o limite de 100MB.');
+        }
+
         const [result] = await db.query(
             'INSERT INTO action_attachments (action_id, filename, original_name, file_size, mime_type, file_path, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [

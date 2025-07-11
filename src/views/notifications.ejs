@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-white text-gray-800 p-4 shadow">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center space-x-8">
+                <img src="/img/Enedes_Vert.png" alt="ENEDES Logo" class="h-40 w-40 object-contain">
+               <h1 class="text-2xl font-bold" style="font-family: 'Saira Condensed', sans-serif;   font-weight: 600;
+  font-style: normal;">Sistema de Gestão e Controle - ENEDES</h1>
+            </div>
+            <!-- Responsive Menu -->
+            <div x-data="{ open: false }" class="flex items-center">
+                <!-- Hamburger Button for Mobile -->
+                <button @click="open = !open" class="md:hidden focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Menu Items -->
+                <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-4 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-md md:shadow-none p-4 md:p-0">
+                     <a href="/dashboard" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline"">📊 Dashboard</a>
+                    <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">🚪 Sair</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+ <main class="container mx-auto p-4">
+    <div class="container mx-auto mt-6 px-4">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Notificações</h2>
+            <div class="flex justify-end mb-4">
+                <a href="/notification/new" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Nova Notificação</a>
+            </div>
+            <% if (error) { %>
+                <p class="text-red-500 mb-4"><%= error %></p>
+            <% } %>
+            <% if (notifications && notifications.length > 0) { %>
+                <form id="notificationsForm" action="/notifications/update" method="POST">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-200">
+                              
+                                <th class="border p-2">Tipo</th>
+                                <th class="border p-2">Título</th>
+                                <th class="border p-2">Mensagem</th>
+                                <th class="border p-2">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% notifications.forEach(notification => { %>
+                                <tr>
+                                   
+                                    <td class="border p-2">
+                                        <label name="notifications[<%= notification.id %>][title]"  class="w-full p-1 "><%= notification.type %></label>
+                                    </td>
+                                    <td class="border p-2">
+                                        <label name="notifications[<%= notification.id %>][title]"  class="w-full p-1 "><%= notification.title %></label>
+                                    </td>
+                                    <td class="border p-2">
+                                        <label name="notifications[<%= notification.id %>][message]" class="w-full p-1 "><%= notification.message %></label>
+                                    </td>                               
+                                   
+                                    <td class="border p-2">
+                                        <a href="/notification/delete/<%= notification.id %>" class="text-red-500 hover:text-red-700" onclick="return confirm('Tem certeza que deseja excluir esta notificação?')">Excluir</a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                  
+                </form>
+            <% } else { %>
+                <p class="text-gray-600">Nenhuma notificação encontrada.</p>
+            <% } %>
+        </div>
+    </div>
+    </main>
+</body>
+</html>
