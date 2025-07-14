@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserModel = void 0;
 const app_1 = require("../app");
-const bcrypt_1 = __importDefault(require("bcrypt"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 class UserModel {
     static findByUsername(username) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -80,7 +80,7 @@ class UserModel {
             if (!user.password) {
                 throw new Error('Senha é obrigatória para criar um usuário.');
             }
-            const hashedPassword = yield bcrypt_1.default.hash(user.password, 10);
+            const hashedPassword = yield bcryptjs_1.default.hash(user.password, 10);
             const [result] = yield app_1.db.query('INSERT INTO users (username, name, email, password, phone, department, role, is_active, needs_password_change) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                 user.username,
                 user.name,
@@ -123,7 +123,7 @@ class UserModel {
             }
             if (user.password) {
                 fields.push('password = ?');
-                values.push(yield bcrypt_1.default.hash(user.password, 10));
+                values.push(yield bcryptjs_1.default.hash(user.password, 10));
             }
             if (user.phone !== undefined) {
                 fields.push('phone = ?');

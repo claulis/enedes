@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const Users_1 = require("../models/Users");
 const app_1 = require("../app");
 class AuthController {
@@ -36,7 +36,7 @@ class AuthController {
                     const [users] = yield app_1.db.query('SELECT username, name FROM users WHERE is_active = 1');
                     return res.status(401).render('login', { users, error: 'Usuário ou senha inválidos.' });
                 }
-                const isPasswordValid = yield bcrypt_1.default.compare(password, user.password);
+                const isPasswordValid = yield bcryptjs_1.default.compare(password, user.password);
                 if (!isPasswordValid) {
                     const [users] = yield app_1.db.query('SELECT username, name FROM users WHERE is_active = 1');
                     return res.status(401).render('login', { users, error: 'Usuário ou senha inválidos.' });

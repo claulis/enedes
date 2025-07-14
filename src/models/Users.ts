@@ -1,5 +1,5 @@
 import { db } from '../app';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2/promise';
 
 export interface User {
