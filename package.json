@@ -4,7 +4,7 @@
     "scripts": {
         "start dev": "nodemon src/app.ts",
         "build": "tsc",
-        "start": "node src/app.ts"        
+        "start": "node app.ts"        
     },
     "dependencies": {
         "bcrypt": "^5.1.1",
