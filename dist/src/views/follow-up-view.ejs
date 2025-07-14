@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-white text-gray-800 p-4 shadow">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center space-x-8">
+                <img src="/img/Enedes_Vert.png" alt="ENEDES Logo" class="h-40 w-40 object-contain">
+               <h1 class="text-2xl font-bold" style="font-family: 'Saira Condensed', sans-serif;   font-weight: 600;
+  font-style: normal;">Sistema de Gestão e Controle - ENEDES</h1>
+            </div>
+            <!-- Responsive Menu -->
+            <div x-data="{ open: false }" class="flex items-center">
+                <!-- Hamburger Button for Mobile -->
+                <button @click="open = !open" class="md:hidden focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Menu Items -->
+                 <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-6 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 rounded-lg">
+    <a href="/dashboard" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-blue-600 transition duration-200 border-b-4 border-blue-500">Dashboard</a>
+    <a href="/logout" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-red-600 transition duration-200 border-b-4 border-red-500">🚪 Sair</a>
+</nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto mt-8 p-4">
+        <% if (error) { %>
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <% if (followUp && action) { %>
+            <h2 class="text-2xl font-bold mb-4">Visualizar Follow-up</h2>
+            <div class="bg-white p-6 rounded shadow">
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2">📋 Informações Básicas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-bold">Título</label>
+                            <p><%= followUp.title %></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold">Atribuído a</label>
+                            <p><%= collaborator ? collaborator.name : 'Não atribuído' %></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold">Prioridade</label>
+                            <p><%= followUp.priority %></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold">Status</label>
+                            <p><%= followUp.status %></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold">Data de Início</label>
+                            <p><%= followUp.start_date ? new Date(followUp.start_date).toLocaleDateString('pt-BR') : 'N/A' %></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold">Data Final</label>
+                            <p><%= new Date(followUp.end_date).toLocaleDateString('pt-BR') %></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold">Novo Prazo</label>
+                            <p><%= followUp.new_deadline ? new Date(followUp.new_deadline).toLocaleDateString('pt-BR') : 'N/A' %></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-bold">Ação Associada</label>
+                            <p><%= action.title %></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2">Descrição</h3>
+                    <p><%= followUp.description %></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2">Próximos Passos</h3>
+                    <p><%= followUp.next_steps || 'N/A' %></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2">Obstáculos</h3>
+                    <p><%= followUp.obstacles || 'N/A' %></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2">Comentários</h3>
+                    <p><%= followUp.comments || 'N/A' %></p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2">📎 Anexos</h3>
+                    <% if (attachments && attachments.length > 0) { %>
+                        <ul class="list-disc pl-5">
+                            <% attachments.forEach(attachment => { %>
+                                <li class="mb-2">
+                                    <a href="/attachment/follow-up/<%= attachment.id %>" class="text-blue-600 hover:underline" target="_blank"><%= attachment.original_name %></a>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <p>Nenhum anexo encontrado.</p>
+                    <% } %>
+                </div>
+
+                <div class="flex space-x-4">
+                    <a href="/follow-up/edit/<%= followUp.id %>" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Editar Follow-up</a>
+                    <a href="/dashboard" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Voltar ao Dashboard</a>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                Follow-up ou ação não encontrada.
+            </div>
+            <a href="/dashboard" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Voltar ao Dashboard</a>
+        <% } %>
+    </main>
+</body>
+</html>

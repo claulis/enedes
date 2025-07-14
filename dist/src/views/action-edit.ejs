@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-white text-gray-800 p-4 shadow">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center space-x-8">
+                <img src="/img/Enedes_Vert.png" alt="ENEDES Logo" class="h-40 w-40 object-contain">
+               <h1 class="text-2xl font-bold" style="font-family: 'Saira Condensed', sans-serif;   font-weight: 600;
+  font-style: normal;">Sistema de Gestão e Controle - ENEDES</h1>
+            </div>
+            <!-- Responsive Menu -->
+            <div x-data="{ open: false }" class="flex items-center">
+                <!-- Hamburger Button for Mobile -->
+                <button @click="open = !open" class="md:hidden focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Menu Items -->
+                <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-6 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 rounded-lg">
+    <a href="/dashboard" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-blue-600 transition duration-200 border-b-4 border-blue-500">Dashboard</a>
+    <a href="/logout" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-red-600 transition duration-200 border-b-4 border-red-500">🚪 Sair</a>
+</nav>
+            </div>
+        </div>
+    </header>
+
+ <main class="container mx-auto p-4">
+            <% if (action) { %>
+                <h2 class="text-2xl font-bold mb-6">Editar Ação</h2>
+                <form action="/action/<%= action.id %>" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <!-- Informações Básicas -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-medium text-gray-900">📋 Informações Básicas</h3>
+                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tarefa/Ação *</label>
+                                <input type="text" name="task" value="<%= action.task %>" required class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Responsável *</label>
+                                <select name="responsible" required class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                    <option value="">Selecione um responsável...</option>
+                                    <% collaborators.forEach(collaborator => { %>
+                                        <option value="<%= collaborator.name %>" <%= action.responsible === collaborator.name ? 'selected' : '' %>><%= collaborator.name %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Seção *</label>
+                                <select name="section" required class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                    <option value="">Selecione uma seção...</option>
+                                    <% sections.forEach(section => { %>
+                                        <option value="<%= section %>" <%= action.section_name === section ? 'selected' : '' %>><%= section %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Prazo *</label>
+                                <input type="date" name="deadline" value="<%= action.deadline.toISOString().split('T')[0] %>" required class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Orçamento</label>
+                                <input type="text" name="budget" value="<%= action.budget || '' %>" class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Status *</label>
+                                <select name="status" required class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                    <option value="pendente" <%= action.status === 'pendente' ? 'selected' : '' %>>Pendente</option>
+                                    <option value="em_andamento" <%= action.status === 'em_andamento' ? 'selected' : '' %>>Em Andamento</option>
+                                    <option value="alerta" <%= action.status === 'alerta' ? 'selected' : '' %>>Alerta</option>
+                                    <option value="concluida" <%= action.status === 'concluida' ? 'selected' : '' %>>Concluída</option>
+                                    <option value="atrasado" <%= action.status === 'atrasado' ? 'selected' : '' %>>Atrasado</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Prioridade *</label>
+                                <select name="priority" required class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                    <option value="low" <%= action.priority === 'low' ? 'selected' : '' %>>Baixa</option>
+                                    <option value="medium" <%= action.priority === 'medium' ? 'selected' : '' %>>Média</option>
+                                    <option value="high" <%= action.priority === 'high' ? 'selected' : '' %>>Alta</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Descrição</label>
+                                <textarea name="description" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded"><%= action.description || '' %></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarefas -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-medium text-gray-900">✅ Tarefas</h3>
+                        <div id="task-list" class="mt-4 space-y-2">
+                            <% if (tasks && tasks.length > 0) { %>
+                                <% tasks.forEach((task, index) => { %>
+                                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded mb-2">
+                                        <input type="hidden" name="tasks[<%= index %>][id]" value="<%= task.id %>">
+                                        <input type="text" name="tasks[<%= index %>][description]" value="<%= task.description %>" placeholder="Descrição da tarefa" class="w-full p-2 border border-gray-300 rounded">
+                                        <div class="flex items-center space-x-4">
+                                            <div>
+                                                <input type="checkbox" name="tasks[<%= index %>][completed]" <%= task.completed ? 'checked' : '' %> class="ml-4">
+                                                <span>Concluída</span>
+                                            </div>
+                                            <a href="/task/delete/<%= task.id %>" class="text-red-600 hover:underline">Excluir</a>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } else { %>
+                                <p class="mt-2 text-gray-500">Nenhuma tarefa encontrada.</p>
+                            <% } %>
+                        </div>
+                        <button type="button" id="add-task" class="mt-4 inline-block text-blue-600 hover:underline">➕ Adicionar Tarefa</button>
+                    </div>
+
+                    <!-- Anexos -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-medium text-gray-900">📎 Anexos</h3>
+                        <% if (attachments && attachments.length > 0) { %>
+                            <ul class="mt-4 space-y-2">
+                                <% attachments.forEach(attachment => { %>
+                                    <li class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                        <a href="/attachment/action/<%= attachment.id %>" class="text-blue-600 hover:underline"><%= attachment.original_name %></a>
+                                        <a href="/attachment/delete/action/<%= attachment.id %>" class="text-red-600 hover:underline">Excluir</a>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        <% } else { %>
+                            <p class="mt-2 text-gray-500">Nenhum anexo encontrado.</p>
+                        <% } %>
+                        <input type="file" name="attachments" multiple class="mt-4 block w-full p-2 border border-gray-300 rounded">
+                        <p class="mt-2 text-sm text-gray-500">Formatos permitidos: PDF, DOCX, XLSX, JPG, PNG (máx. 10MB)</p>
+                    </div>
+
+                    <!-- Follow-ups -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-medium text-gray-900">🔄 Follow-ups</h3>
+                        <% if (followUps && followUps.length > 0) { %>
+                            <ul class="mt-4 space-y-2">
+                                <% followUps.forEach(followUp => { %>
+                                    <li class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                        <a href="/follow-up/<%= followUp.id %>" class="text-blue-600 hover:underline"><%= followUp.title %></a>
+                                        <div>
+                                            <a href="/follow-up/edit/<%= followUp.id %>" class="text-blue-600 hover:underline">Editar</a>
+                                            <a href="/follow-up/delete/<%= followUp.id %>" class="text-red-600 hover:underline">Excluir</a>
+                                        </div>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        <% } else { %>
+                            <p class="mt-2 text-gray-500">Nenhum follow-up encontrado.</p>
+                        <% } %>
+                        <a href="/follow-up/new/<%= action.id %>" class="mt-4 inline-block text-blue-600 hover:underline">➕ Adicionar Follow-up</a>
+                    </div>
+
+                    <!-- Atribuições de Tarefas -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-medium text-gray-900">📋 Atribuições de Tarefas</h3>
+                        <% if (assignments && assignments.length > 0) { %>
+                            <ul class="mt-4 space-y-2">
+                                <% assignments.forEach(assignment => { %>
+                                    <li class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                        <span><%= assignment.collaborator_name %> - <%= assignment.task_description %> (<%= assignment.status %>)</span>
+                                        <div>
+                                            <a href="/task-assignment/edit/<%= assignment.id %>" class="text-blue-600 hover:underline">Editar</a>
+                                            <a href="/task-assignment/delete/<%= assignment.id %>" class="text-red-600 hover:underline">Excluir</a>
+                                        </div>
+                                    </li>
+                                <% }) %>
+                            </ul>
+                        <% } else { %>
+                            <p class="mt-2 text-gray-500">Nenhuma atribuição encontrada.</p>
+                        <% } %>
+                        <a href="/task-assignment/new/<%= action.id %>" class="mt-4 inline-block text-blue-600 hover:underline">➕ Adicionar Atribuição</a>
+                    </div>
+
+                    <!-- Observações -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-medium text-gray-900">📝 Observações</h3>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700">Observações</label>
+                            <textarea name="note" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded"><%= action.note || '' %></textarea>
+                        </div>
+                        <div class="mt-4 flex items-center space-x-4">
+                            <input type="checkbox" name="completed" <%= action.completed ? 'checked' : '' %> class="mr-2">
+                            <label class="text-sm font-medium text-gray-700">Ação concluída</label>
+                            <input type="checkbox" name="validated" <%= action.validated ? 'checked' : '' %> class="mr-2">
+                            <label class="text-sm font-medium text-gray-700">Validada pela coordenação</label>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="flex justify-between">
+                        <a href="/dashboard" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancelar</a>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar Ação</button>
+                    </div>
+                </form>
+
+                <!-- Botão Excluir Ação -->
+                <form action="/action/delete/<%= action.id %>" method="GET" class="mt-6">
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Excluir Ação</button>
+                </form>
+            <% } else { %>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <p class="text-red-600">Ação não encontrada.</p>
+                    <a href="/dashboard" class="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Voltar ao Dashboard</a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('add-task').addEventListener('click', () => {
+            const taskList = document.getElementById('task-list');
+            const taskCount = taskList.querySelectorAll('input[name$="[description]"]').length;
+            const newTask = document.createElement('div');
+            newTask.className = 'flex items-center justify-between p-2 bg-gray-50 rounded mb-2';
+            newTask.innerHTML = `
+                <input type="text" name="tasks[${taskCount}][description]" placeholder="Descrição da nova tarefa" class="w-full p-2 border border-gray-300 rounded">
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <input type="checkbox" name="tasks[${taskCount}][completed]" class="ml-4">
+                        <span>Concluída</span>
+                    </div>
+                </div>
+            `;
+            taskList.appendChild(newTask);
+        });
+    </script>
+</body>
+</html>

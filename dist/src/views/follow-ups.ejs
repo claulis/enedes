@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-white text-gray-800 p-4 shadow">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center space-x-8">
+                <img src="/img/Enedes_Vert.png" alt="ENEDES Logo" class="h-40 w-40 object-contain">
+               <h1 class="text-2xl font-bold" style="font-family: 'Saira Condensed', sans-serif;   font-weight: 600;
+  font-style: normal;">Sistema de Gestão e Controle - ENEDES</h1>
+            </div>
+            <!-- Responsive Menu -->
+            <div x-data="{ open: false }" class="flex items-center">
+                <!-- Hamburger Button for Mobile -->
+                <button @click="open = !open" class="md:hidden focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Menu Items -->
+                  <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-6 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 rounded-lg">
+    <a href="/dashboard" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-blue-600 transition duration-200 border-b-4 border-blue-500">Dashboard</a>
+    <a href="/logout" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-red-600 transition duration-200 border-b-4 border-red-500">🚪 Sair</a>
+</nav>
+            </div>
+        </div>
+    </header>
+    <main class="container mx-auto p-4">
+     <div class="container mx-auto mt-6 px-4">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Follow-ups</h2>
+
+            <!-- Filter Form 
+            <form action="/follow-ups" method="GET" class="mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-gray-700">Filtrar por Ação</label>
+                        <select name="action_id" class="w-full p-2 border rounded">
+                            <option value="">Todas as Ações</option>
+                            <% actions.forEach(action => { %>
+                                <option value="<%= action.id %>" <%= action_id == action.id ? 'selected' : '' %>><%= action.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Filtrar por Colaborador</label>
+                        <select name="assigned_to" class="w-full p-2 border rounded">
+                            <option value="">Todos os Colaboradores</option>
+                            <% collaborators.forEach(collaborator => { %>
+                                <option value="<%= collaborator.id %>" <%= assigned_to == collaborator.id ? 'selected' : '' %>><%= collaborator.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700">Pesquisar</label>
+                        <input type="text" name="search" value="<%= search || '' %>" class="w-full p-2 border rounded" placeholder="Título ou descrição...">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full">Filtrar</button>
+                    </div>
+                </div>
+            </form>
+-->
+            <!-- Error Message -->
+            <% if (error) { %>
+                <p class="text-red-500 mb-4"><%= error %></p>
+            <% } %>
+
+            <!-- Follow-ups Table -->
+            <% if (followUps && followUps.length > 0) { %>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-200">
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=id&order=<%= sort === 'id' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        ID
+                                        <% if (sort === 'id') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=title&order=<%= sort === 'title' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        Título
+                                        <% if (sort === 'title') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=action_name&order=<%= sort === 'action_name' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        Ação
+                                        <% if (sort === 'action_name') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=collaborator_name&order=<%= sort === 'collaborator_name' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        Atribuído a
+                                        <% if (sort === 'collaborator_name') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=priority&order=<%= sort === 'priority' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        Prioridade
+                                        <% if (sort === 'priority') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=status&order=<%= sort === 'status' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        Status
+                                        <% if (sort === 'status') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=start_date&order=<%= sort === 'start_date' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        Data de Início
+                                        <% if (sort === 'start_date') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=end_date&order=<%= sort === 'end_date' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        Data Final
+                                        <% if (sort === 'end_date') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">
+                                    <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=created_at&order=<%= sort === 'created_at' && order === 'ASC' ? 'DESC' : 'ASC' %>&page=<%= page %>" class="flex items-center">
+                                        Criado Em
+                                        <% if (sort === 'created_at') { %>
+                                            <span><%= order === 'ASC' ? '▲' : '▼' %></span>
+                                        <% } %>
+                                    </a>
+                                </th>
+                                <th class="border p-2">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% followUps.forEach(followUp => { %>
+                                <tr>
+                                    <td class="border p-2"><%= followUp.id %></td>
+                                    <td class="border p-2"><label><%= followUp.title %></label></td>
+                                    <td class="border p-2">
+                                        <% if (followUp.action_id && followUp.action_name) { %>
+                                            <a href="/action/edit/<%= followUp.action_id %>" class="text-blue-500 hover:underline"><%= followUp.action_name %></a>
+                                        <% } else { %>
+                                            <span class="text-gray-500">Ação não encontrada</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="border p-2"><%= followUp.collaborator_name || 'Não atribuído' %></td>
+                                    <td class="border p-2 text-center">
+                                        <span class="inline-block px-2 py-1 rounded text-white <%= followUp.priority === 'high' ? 'bg-red-500' : followUp.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500' %>">
+                                            <%= followUp.priority === 'high' ? '🔥 Alta' : followUp.priority === 'medium' ? '⚖️ Média' : '🍃 Baixa' %>
+                                        </span>
+                                    </td>
+                                    <td class="border p-2 text-center">
+                                        <span class="inline-block px-2 py-1 rounded text-white <%= followUp.status === 'completed' ? 'bg-green-500' : followUp.status === 'in_progress' ? 'bg-blue-500' : followUp.status === 'cancelled' ? 'bg-red-500' : 'bg-gray-500' %>">
+                                            <%= followUp.status === 'completed' ? '✅ Concluído' : followUp.status === 'in_progress' ? '🔄 Em Andamento' : followUp.status === 'cancelled' ? '❌ Cancelado' : '⏳ Pendente' %>
+                                        </span>
+                                    </td>
+                                    <td class="border p-2"><%= followUp.start_date ? new Date(followUp.start_date).toLocaleDateString('pt-BR') : '-' %></td>
+                                    <td class="border p-2 <%= followUp.days_until_deadline < 0 ? 'text-red-500' : '' %>">
+                                        <%= new Date(followUp.end_date).toLocaleDateString('pt-BR') %>
+                                        <% if (followUp.days_until_deadline < 0) { %>
+                                            (Atrasado)
+                                        <% } else if (followUp.days_until_deadline <= 7) { %>
+                                            (Vence em <%= followUp.days_until_deadline %> dias)
+                                        <% } %>
+                                    </td>
+                                    <td class="border p-2"><%= new Date(followUp.created_at).toLocaleDateString('pt-BR') %></td>
+                                    <td class="border p-2">
+                                        <a href="/follow-up/edit/<%= followUp.id %>" class="text-blue-500 hover:underline mr-2">Editar</a>
+                                        <a href="/follow-up/delete/<%= followUp.id %>" class="text-red-500 hover:underline" onclick="return confirm('Tem certeza que deseja excluir este follow-up?')">Excluir</a>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination 
+                <div class="mt-4 flex justify-between items-center">
+                    <div>
+                        <p>Mostrando <%= (page - 1) * 10 + 1 %> a <%= Math.min(page * 10, totalItems) %> de <%= totalItems %> follow-ups</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <% if (page > 1) { %>
+                            <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=<%= sort %>&order=<%= order %>&page=<%= page - 1 %>" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Anterior</a>
+                        <% } %>
+                        <% if (page < totalPages) { %>
+                            <a href="/follow-ups?action_id=<%= action_id || '' %>&assigned_to=<%= assigned_to || '' %>&search=<%= search || '' %>&sort=<%= sort %>&order=<%= order %>&page=<%= page + 1 %>" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Próximo</a>
+                        <% } %>
+                    </div>
+                </div>-->
+            <% } else { %>
+                <p class="text-gray-600">Nenhum follow-up encontrado.</p>
+            <% } %>
+        </div>
+    </div>
+    </main>
+</body>
+</html>

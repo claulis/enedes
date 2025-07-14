@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "scripts": {
         "start dev": "nodemon src/app.ts",
-        "build": "tsc",
-        "start": "node dist/app.ts"        
+        "build": "tsc && copyfiles -u 1 src/views/**/* dist/src/ && copyfiles -u 1 src/public/**/* dist/src/",
+        "start": "node dist/src/app.js"
     },
     "dependencies": {
         "bcrypt": "^5.1.1",
@@ -24,6 +24,7 @@
         "@types/express-session": "^1.18.2",
         "@types/multer": "^2.0.0",
         "@types/node": "^20.5.9",
+        "copyfiles": "^2.4.1",
         "nodemon": "^3.0.1",
         "ts-node": "^10.9.1",
         "typescript": "^5.2.2"

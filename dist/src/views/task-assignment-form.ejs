@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-white text-gray-800 p-4 shadow">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center space-x-8">
+                <img src="/img/Enedes_Vert.png" alt="ENEDES Logo" class="h-40 w-40 object-contain">
+               <h1 class="text-2xl font-bold" style="font-family: 'Saira Condensed', sans-serif;   font-weight: 600;
+  font-style: normal;">Sistema de Gestão e Controle - ENEDES</h1>
+            </div>
+            <!-- Responsive Menu -->
+            <div x-data="{ open: false }" class="flex items-center">
+                <!-- Hamburger Button for Mobile -->
+                <button @click="open = !open" class="md:hidden focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Menu Items -->
+                 <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-6 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 rounded-lg">
+    <a href="/dashboard" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-blue-600 transition duration-200 border-b-4 border-blue-500">Dashboard</a>
+    <a href="/logout" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-red-600 transition duration-200 border-b-4 border-red-500">🚪 Sair</a>
+</nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto mt-8 p-4">
+        <% if (error) { %>
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <% if (action && tasks && tasks.length > 0) { %>
+            <h2 class="text-2xl font-bold mb-4"><%= typeof assignment !== 'undefined' && assignment ? 'Editar Atribuição de Tarefa' : 'Nova Atribuição de Tarefa' %></h2>
+            <div class="bg-white p-6 rounded shadow">
+                <form action="<%= typeof assignment !== 'undefined' && assignment ? '/task-assignment/' + assignment.id : '/task-assignment' %>" method="POST">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold mb-2">📋 Informações da Atribuição</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="action_id" class="block text-gray-700 font-bold">Ação Associada</label>
+                                <input type="text" value="<%= action.task %>" class="w-full p-2 border rounded" disabled>
+                                <input type="hidden" name="action_id" value="<%= action.id %>">
+                            </div>
+                            <div>
+                                <label for="task_id" class="block text-gray-700 font-bold">Tarefa Associada *</label>
+                                <select name="task_id" id="task_id" class="w-full p-2 border rounded" required>
+                                    <option value="">Selecione uma tarefa...</option>
+                                    <% tasks.forEach(task => { %>
+                                        <option value="<%= task.id %>" <%= typeof assignment !== 'undefined' && assignment && assignment.task_id === task.id ? 'selected' : '' %>>
+                                            <%= task.description %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="collaborator_id" class="block text-gray-700 font-bold">Atribuído a *</label>
+                                <select name="collaborator_id" id="collaborator_id" class="w-full p-2 border rounded" required>
+                                    <option value="">Selecione um colaborador...</option>
+                                    <% collaborators.forEach(collaborator => { %>
+                                        <option value="<%= collaborator.id %>" <%= typeof assignment !== 'undefined' && assignment && assignment.collaborator_id === collaborator.id ? 'selected' : '' %>>
+                                            <%= collaborator.name %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="deadline" class="block text-gray-700 font-bold">Prazo</label>
+                                <input type="date" name="deadline" id="deadline" value="<%= typeof assignment !== 'undefined' && assignment && assignment.deadline ? assignment.deadline.toISOString().split('T')[0] : '' %>" class="w-full p-2 border rounded">
+                            </div>
+                            <div>
+                                <label for="priority" class="block text-gray-700 font-bold">Prioridade</label>
+                                <select name="priority" id="priority" class="w-full p-2 border rounded">
+                                    <option value="low" <%= typeof assignment !== 'undefined' && assignment && assignment.priority === 'low' ? 'selected' : '' %>>Baixa</option>
+                                    <option value="medium" <%= typeof assignment !== 'undefined' && assignment && assignment.priority === 'medium' ? 'selected' : '' %>>Média</option>
+                                    <option value="high" <%= typeof assignment !== 'undefined' && assignment && assignment.priority === 'high' ? 'selected' : '' %>>Alta</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label for="message" class="block text-gray-700 font-bold">Mensagem</label>
+                                <textarea name="message" id="message" class="w-full p-2 border rounded" rows="4"><%= typeof assignment !== 'undefined' && assignment ? assignment.message : '' %></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <a href="/dashboard" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Cancelar</a>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            <%= typeof assignment !== 'undefined' && assignment ? 'Salvar Atribuição' : 'Criar Atribuição' %>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        <% } else { %>
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                <%= tasks && tasks.length === 0 ? 'Nenhuma tarefa disponível para esta ação.' : 'Ação não encontrada.' %>
+            </div>
+            <a href="/dashboard" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Voltar ao Dashboard</a>
+        <% } %>
+    </main>
+</body>
+</html>
