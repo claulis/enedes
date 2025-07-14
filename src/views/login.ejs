@@ -8,14 +8,19 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h1 class="text-2xl font-bold mb-6 text-center">Sistema ENEDES</h1>
-        <h2 class="text-lg text-center mb-4">Escola de Negócios e Desenvolvimento Social do Instituto Federal de Brasília</h2>
-
+      <div class="flex flex-col items-center space-y-4">
+    <img src="/img/Enedes_Vert.png" alt="ENEDES Logo" class="h-80 w-80 object-contain">
+    <br>
+    <h1 class="text-2x2 font-bold" style="font-family: 'Saira Condensed', sans-serif; font-weight: 600; font-style: normal;">
+        Sistema de Gestão e Controle - ENEDES
+    </h1><br><br>
+</div>
         <% if (error) { %>
             <div class="bg-red-100 text-red-700 p-4 rounded mb-4"><%= error %></div>
         <% } %>
 
         <form action="/login" method="POST" class="space-y-4">
+           
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-700">Usuário:</label>
                 <select name="username" id="username" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">

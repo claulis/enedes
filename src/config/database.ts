@@ -1,9 +1,14 @@
+import { configDotenv } from 'dotenv';
+
+// Carrega as variáveis do arquivo .env
+configDotenv();
+
 export const dbConfig = {
-    host: 'localhost',
-    user: 'sistemae01_add2',
-    password: 'Enedes2025',
-    database: 'sistemaenedes02',
+    host: process.env.DB_HOST ,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE ,
     waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
+    queueLimit: Number(process.env.DB_QUEUE_LIMIT) || 0
 };

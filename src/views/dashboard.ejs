@@ -36,13 +36,11 @@
                     </svg>
                 </button>
                 <!-- Menu Items -->
-                <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-4 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-md md:shadow-none p-4 md:p-0">
-                    <a href="/collaborators" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Colaboradores</a>
-                    <a href="/follow-ups" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Follow Ups</a>
-                    <a href="/executions" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Execução Orçamentária</a>
-                    <a onclick="exportarPDF()" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Exportar</a>
-                    <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">🚪 Sair</a>
-                </nav>
+               <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-6 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-lg md:shadow-none p-6 md:p-0 rounded-lg">
+    <a href="/collaborators" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-blue-600 transition duration-200 border-b-4 border-blue-500">Colaboradores</a>
+    <a href="/follow-ups" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-green-600 transition duration-200 border-b-4 border-green-500">Follow Ups</a>
+    <a href="/logout" class="block px-4 py-3 text-gray-800 hover:bg-gray-200 rounded-md md:hover:bg-transparent md:hover:text-red-600 transition duration-200 border-b-4 border-red-500">🚪 Sair</a>
+</nav>
             </div>
         </div>
     </header>
@@ -107,10 +105,43 @@
             </div>
         </section>
        
-        
-        <!-- Execution section -->
         <section>
-        
+             <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <details class="group">
+                <summary class="flex justify-between items-center cursor-pointer p-4 bg-gray-200 rounded-lg">
+                    <h2 class="text-xl font-semibold">Metas</h2>
+                    <span class="group-open:rotate-180">▼</span>
+                </summary>
+                <div class="mt-4">
+                    <% if (metas && Array.isArray(metas) && metas.length > 0) { %>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <% metas.forEach(meta => { %>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-gray-800"><%= meta.goal_description || 'Sem descrição' %></h3>
+                        <p class="text-sm text-gray-600">Seção: <%= meta.section_name || 'N/A' %></p>
+                        <p class="text-sm text-gray-600">Indicador: <%= meta.indicator || 'N/A' %></p>
+                        <p class="text-sm text-gray-600">Meta Social: <%= meta.social_goal || 'N/A' %></p>
+                        <div class="mt-2">
+                            <div class="bg-gray-200 rounded-full h-4">
+                                <div class="progress-bar-fill bg-gradient-to-r from-blue-300 to-blue-500 h-4 rounded-full" style="width: <%= meta.percentage_completion != null ? meta.percentage_completion : 0 %>%"></div>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">Progresso: <%= meta.percentage_completion != null ? meta.percentage_completion : 0 %>%</p>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <p class="text-gray-600">Nenhuma meta encontrada.</p>
+        <% } %>
+                 </div></details>
+    <div class="flex justify-end mt-4">
+        <a href="/metas" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Gerenciar Metas</a>
+    </div>
+                </div>
+             </div>
+        </section>
+        <!-- Execution section -->
+        <section>        
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <details class="group">
                 <summary class="flex justify-between items-center cursor-pointer p-4 bg-gray-200 rounded-lg">

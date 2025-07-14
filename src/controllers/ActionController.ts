@@ -5,6 +5,7 @@ import { TaskModel } from '../models/Tasks';
 import { User } from '../models/Users';
 import { CollaboratorModel } from '../models/Collaborators';
 import { NotificationModel } from '../models/Notifications';
+import { MetaModel} from '../models/Metas'
 import { ExecutionModel} from '../models/Execution';
 import { ActionAttachmentModel } from '../models/ActionAttachments';
 import { FollowUpModel } from '../models/FollowUps';
@@ -51,10 +52,11 @@ export class ActionController {
         };
 
         try {
-            const [actions,executions, notifications, stats] = await Promise.all([
+            const [actions,executions, notifications, metas, stats] = await Promise.all([
                 ActionModel.findAll(user.id, user.role, sections, filters),
                 ExecutionModel.findAll(),
                 NotificationModel.findByUserId(user.id),
+                MetaModel.findAll(),
                 db.query<StatsRow[]>('SELECT * FROM user_dashboard WHERE user_id = ?', [user.id])
             ]);
 
@@ -73,6 +75,7 @@ export class ActionController {
                 actions: actionDetails,
                 executions,
                 notifications,
+                metas,
                 stats: userStats,
                 filters,
                 error: null
@@ -84,6 +87,7 @@ export class ActionController {
                 sections,
                 actions: [],
                 notifications: [],
+                metas:[],
                 stats: null,
                 filters,
                 error: 'Erro ao carregar o dashboard.'
