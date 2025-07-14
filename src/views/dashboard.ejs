@@ -9,6 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+<style>
+        .card-bg-1 { background-color: #fefcbf; }
+        .card-bg-2 { background-color: #e6fffa; }
+        .card-bg-3 { background-color: #e9d8fd; }
+        .progress-bar-fill { transition: width 1s ease-in-out; }
+        @keyframes growProgress { from { width: 0; } }
+        .progress-bar-fill { animation: growProgress 1s ease-in-out forwards; }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans">
     <header class="bg-white text-gray-800 p-4 shadow">
@@ -30,7 +38,9 @@
                 <!-- Menu Items -->
                 <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-4 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-md md:shadow-none p-4 md:p-0">
                     <a href="/collaborators" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Colaboradores</a>
-                    <a href="/export" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Exportar</a>
+                    <a href="/follow-ups" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Follow Ups</a>
+                    <a href="/executions" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Execução Orçamentária</a>
+                    <a onclick="exportarPDF()" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Exportar</a>
                     <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">🚪 Sair</a>
                 </nav>
             </div>
@@ -96,8 +106,45 @@
                 <p class="text-2xl"><%= stats.unread_notifications %></p>
             </div>
         </section>
-
+       
+        
+        <!-- Execution section -->
+        <section>
+        
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <details class="group">
+                <summary class="flex justify-between items-center cursor-pointer p-4 bg-gray-200 rounded-lg">
+                    <h2 class="text-xl font-semibold">Execução Orçamentária</h2>
+                    <span class="group-open:rotate-180">▼</span>
+                </summary>
+                <div class="mt-4">
+                     <% if (executions && executions.length > 0) { %>
+                        <div class="grid grid-cols-3 gap-4">
+                            <% executions.forEach((execution, index) => { %>
+                                <div class="p-4 rounded-lg <%= index % 3 === 0 ? 'card-bg-1' : index % 3 === 1 ? 'card-bg-2' : 'card-bg-3' %>">
+                                    <h3 class="text-lg font-semibold"><%= execution.section_name %></h3>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                        <div class="progress-bar-fill bg-blue-600 h-2.5 rounded-full" style="width: <%= execution.total_budget > 0 ? (parseFloat(execution.executed) / parseFloat(execution.total_budget) * 100) : 0 %>%;"></div>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Executado: <%= parseFloat(execution.executed).toFixed(2) %> / Total: <%= parseFloat(execution.total_budget).toFixed(2) %> (<%= execution.total_budget > 0 ? (parseFloat(execution.executed) / parseFloat(execution.total_budget) * 100).toFixed(0) : 0 %>%)</p>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <p>Nenhuma execução encontrada.</p>
+                    <% } %>
+                 
+                </div>
+                  
+            </details>
+             <div class="flex justify-end mt-4">
+                <a href="/executions" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Gerenciar Execução</a>
+               </div>
+        </div>
+        </section>
+        
         <!-- Notifications Section (Horizontal Layout) -->
+        <section>        
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <details class="group">
                 <summary class="flex justify-between items-center cursor-pointer p-4 bg-gray-200 rounded-lg">
@@ -138,9 +185,11 @@
                 <a href="/notifications" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Gerenciar Notificações</a>
             </div>
         </div>
+        </section>
 
         <!-- Actions Section -->
         <section>
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold">Ações</h2>
                 <a href="/action/new" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Nova Ação</a>
@@ -173,7 +222,7 @@
                                             <div class="w-full bg-gray-200 rounded-full h-4">
                                                 <div class="bg-blue-600 h-4 rounded-full" style="width: <%= progress %>%"></div>
                                             </div>
-                                            <p class="text-sm text-gray-500 mt-1">Progresso: <%= progress %>%</p>
+                                            <p class="progress-bar-fill text-sm text-gray-500 mt-1">Progresso: <%= progress %>%</p>
                                         </div>
                             <p><strong>Tarefas:</strong></p>
                             <% if (action.tasks && action.tasks.length > 0) { %>
@@ -236,37 +285,38 @@
             <% } else { %>
                 <p class="text-gray-600">Nenhuma ação encontrada.</p>
             <% } %>
+            </div>
         </section>
     </main>
     <script>
-     document.addEventListener('DOMContentLoaded', () => {
-    const checkboxes = document.querySelectorAll('.mark-read-checkbox');
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', async (event) => {
-            const notificationId = event.target.getAttribute('data-notification-id');
+        async function exportarPDF() {
             try {
-                const response = await fetch(`/notification/mark-read/${notificationId}`, {
+                const response = await fetch('/gerar-pdf', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({
+                        url: window.location.href,
+                    }),
                 });
-                const result = await response.json();
-                if (result.success) {
-                    event.target.disabled = true;
-                    event.target.closest('.list-group-item').classList.add('text-muted');
-                } else {
-                    alert('Erro ao marcar como lida: ' + result.message);
-                    event.target.checked = false; // Revert checkbox
+
+                if (!response.ok) {
+                    throw new Error('Erro na requisição: ' + response.statusText);
                 }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'dashboard.pdf';
+                link.click();
+                window.URL.revokeObjectURL(url);
             } catch (error) {
-                console.error('Error marking notification as read:', error);
-                alert('Erro ao marcar como lida.');
-                event.target.checked = false; // Revert checkbox
+                console.error('Erro ao exportar PDF:', error);
+                alert('Erro ao gerar o PDF');
             }
-        });
-    });
-});
+        }
     </script>
 </body>
 </html>

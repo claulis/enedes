@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-white text-gray-800 p-4 shadow">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center space-x-8">
+                <img src="/img/Enedes_Vert.png" alt="ENEDES Logo" class="h-40 w-40 object-contain">
+               <h1 class="text-2xl font-bold" style="font-family: 'Saira Condensed', sans-serif;   font-weight: 600;
+  font-style: normal;">Sistema de Gestão e Controle - ENEDES</h1>
+            </div>
+            <!-- Responsive Menu -->
+            <div x-data="{ open: false }" class="flex items-center">
+                <!-- Hamburger Button for Mobile -->
+                <button @click="open = !open" class="md:hidden focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Menu Items -->
+                <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-4 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-md md:shadow-none p-4 md:p-0">
+                      <a href="/dashboard" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline"">📊 Dashboard</a>
+                    <a href="/export" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Exportar</a>
+                    <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">🚪 Sair</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+        <!-- Main Content -->
+    <main class="container mx-auto p-4">
+    <div class="container mx-auto mt-6 px-4">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Execuções Orçamentárias</h2>
+
+
+            <!-- Form for Creating Execution -->
+             <details class="mb-6">
+                <summary class="flex justify-between items-center cursor-pointer p-4 bg-gray-200 rounded-lg">
+                    <h3 class="text-lg font-semibold">Nova Execução Orçamentária</h3>
+                    <span class="group-open:rotate-180">▼</span>
+                </summary>
+                <form id="create-form" action="/execution" method="POST" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Seção *</label>
+                        <select name="section_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <% sections.forEach(section => { %>
+                                <option value="<%= section.id %>"><%= section.name %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nome da Seção *</label>
+                        <input type="text" name="section_name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Data de Início</label>
+                        <input type="text" name="start_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Data de Fim</label>
+                        <input type="text" name="end_date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Executado</label>
+                        <input type="number" step="0.01" name="executed" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Saldo</label>
+                        <input type="number" step="0.01" name="balance" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Orçamento Total</label>
+                        <input type="number" step="0.01" name="total_budget" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Adicionar</button>
+                </form>
+             </details>
+
+            <!-- Filter 
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">Filtrar Execuções</h3>
+                    <button onclick="toggleForm('filter-form')" class="text-blue-600 hover:text-blue-800">▼</button>
+                </div>
+                <form id="filter-form" action="/executions" method="GET" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Filtrar por Nome da Seção</label>
+                        <input type="text" name="section_name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filtrar</button>
+                </form>
+            </div>-->
+
+            <!-- Executions Table -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <% if (executions.length > 0) { %>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seção</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Início</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Fim</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Executado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orçamento Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <% executions.forEach(execution => { %>
+                                <tr>
+                                    <td class="border p-2"><%= execution.id %></td>
+                                    <td class="border p-2"><label><%= execution.section_name %></label>
+                                          <input  type="hidden" name="section_id" value="<%= execution.section_id %>" class="w-full p-1 border rounded" form="edit-form-<%= execution.id %>">
+                                    </td>
+                                    <td class="border p-2">
+                                          <input type="date" name="start_date"  value="<%= execution.start_date %>" class="w-full p-1 border rounded" form="edit-form-<%= execution.id %>">
+                                    </td>
+                                     <td class="border p-2"> 
+                                          <input type="date" name="end_date" value="<%= execution.end_date %>" class="w-full p-1 border rounded" form="edit-form-<%= execution.id %>">
+                                        
+                                    </td>
+                                     <td class="border p-2"> 
+                                          <input type="number" name="executed" value="<%= execution.executed %>" class="w-full p-1 border rounded" form="edit-form-<%= execution.id %>">
+                                        
+                                    </td>
+                                   <td class="border p-2"> 
+                                        <label><%= (execution.total_budget - execution.executed).toFixed(2) %></label>
+                                        
+                                    </td>
+                                    <td class="border p-2"> 
+                                          <input type="number" name="total_budget" value="<%= execution.total_budget %>" class="w-full p-1 border rounded" form="edit-form-<%= execution.id %>">
+                                        
+                                    </td>
+                                    <td class="border p-2">
+                                        <form id="edit-form-<%= execution.id %>" action="/execution/<%= execution.id %>" method="POST" class="inline">
+                                         <button type="submit" class="text-blue-600 hover:text-blue-800">Salvar</button>
+                                        </form>
+                                        <a href="/execution/delete/<%= execution.id %>" class="text-red-600 hover:text-red-800">Excluir</a>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <p>Nenhuma execução encontrada.</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</main>
+   
+</body>
+</html>
+
+

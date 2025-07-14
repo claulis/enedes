@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ENEDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-white text-gray-800 p-4 shadow">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center space-x-8">
+                <img src="/img/Enedes_Vert.png" alt="ENEDES Logo" class="h-40 w-40 object-contain">
+               <h1 class="text-2xl font-bold" style="font-family: 'Saira Condensed', sans-serif;   font-weight: 600;
+  font-style: normal;">Sistema de Gestão e Controle - ENEDES</h1>
+            </div>
+            <!-- Responsive Menu -->
+            <div x-data="{ open: false }" class="flex items-center">
+                <!-- Hamburger Button for Mobile -->
+                <button @click="open = !open" class="md:hidden focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Menu Items -->
+                <nav x-bind:class="{ 'block': open, 'hidden': !open }" class="md:flex md:items-center md:space-x-4 absolute md:static top-16 right-0 bg-white md:bg-transparent shadow-md md:shadow-none p-4 md:p-0">
+                      <a href="/dashboard" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline"">📊 Dashboard</a>
+                    <a href="/export" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">📥 Exportar</a>
+                    <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 rounded-md md:hover:bg-transparent md:hover:underline">🚪 Sair</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <main class="container mx-auto p-6">
+        <h2 class="text-2xl font-bold mb-4">Metas</h2>
+
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <button onclick="document.getElementById('new-meta-form').classList.toggle('hidden')"
+                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Novo Meta ▼
+                    </button>
+                </div>
+            </div>
+
+            <form id="new-meta-form" action="/metas" method="POST" class="hidden bg-white p-6 rounded shadow-md mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="section_id" class="block text-sm font-medium text-gray-700">Seção *</label>
+                        <select name="section_id" id="section_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                            <% sections.forEach(section => { %>
+                                <option value="<%= section.id %>"><%= section.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="goal_description" class="block text-sm font-medium text-gray-700">Descrição da Meta *</label>
+                        <textarea name="goal_description" id="goal_description" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></textarea>
+                    </div>
+                    <div>
+                        <label for="indicator" class="block text-sm font-medium text-gray-700">Indicador *</label>
+                        <textarea name="indicator" id="indicator" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required></textarea>
+                    </div>
+                    <div>
+                        <label for="percentage_completion" class="block text-sm font-medium text-gray-700">Percentual de Conclusão *</label>
+                        <input type="number" name="percentage_completion" id="percentage_completion" min="0" max="100" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                    </div>
+                    <div>
+                        <label for="social_goal" class="block text-sm font-medium text-gray-700">Meta Social *</label>
+                        <input type="text" name="social_goal" id="social_goal" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Adicionar</button>
+                </div>
+            </form>
+        </div>
+
+        <!--<div class="mb-6">
+            <form action="/metas" method="GET" class="flex items-center space-x-4">
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700">Filtrar por Nome</label>
+                    <input type="text" name="search" id="search" value="<%= search %>" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4">Filtrar</button>
+                </div>
+            </form>
+        </div>-->
+
+        <% if (error) { %>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <% if (metas.length > 0) { %>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ID
+                                <a href="/metas?sort=id&order=<%= order === 'ASC' && sort === 'id' ? 'DESC' : 'ASC' %>">↕</a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Seção
+                                <a href="/metas?sort=section_id&order=<%= order === 'ASC' && sort === 'section_id' ? 'DESC' : 'ASC' %>">↕</a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Descrição da Meta
+                                <a href="/metas?sort=goal_description&order=<%= order === 'ASC' && sort === 'goal_description' ? 'DESC' : 'ASC' %>">↕</a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Indicador
+                                <a href="/metas?sort=indicator&order=<%= order === 'ASC' && sort === 'indicator' ? 'DESC' : 'ASC' %>">↕</a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Percentual de Conclusão
+                                <a href="/metas?sort=percentage_completion&order=<%= order === 'ASC' && sort === 'percentage_completion' ? 'DESC' : 'ASC' %>">↕</a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Meta Social
+                                <a href="/metas?sort=social_goal&order=<%= order === 'ASC' && sort === 'social_goal' ? 'DESC' : 'ASC' %>">↕</a>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <% metas.forEach(meta => { %>
+                            <tr>
+                                <td class="border p-2"><%= meta.id %></td>
+                                <td class="border p-2">  
+                                    <select name="section_id" class="border-gray-300 rounded-md shadow-sm" form="edit-form-<%= meta.id %>" >
+                                            <% sections.forEach(section => { %>
+                                                <option  value="<%= section.id %>" <%= section.id === meta.section_id ? 'selected' : '' %>  ><%= section.name %></option>
+                                            <% }) %>
+                                    </select>
+                                </td>
+                                <td class="border p-2"> <textarea name="goal_description" class="w-full p-1 border rounded" form="edit-form-<%= meta.id %>"><%= meta.goal_description %></textarea></td>
+                                <td class="border p-2"> <textarea name="indicator"class="w-full p-1 border rounded" form="edit-form-<%= meta.id %>"><%= meta.indicator %></textarea></td>
+                                <td class="border p-2"> <input type="number" name="percentage_completion" value="<%= meta.percentage_completion %>" min="0" max="100" class="w-full p-1 border rounded" form="edit-form-<%= meta.id %>"> %</td>
+                                <td class="border p-2"><input type="text" name="social_goal" value="<%= meta.social_goal %>" class="w-full p-1 border rounded" form="edit-form-<%= meta.id %>"></td>
+                                <td class="border p-2">
+                                    <form id="edit-form-<%= meta.id %>" action="/metas/<%= meta.id %>" method="POST" class="inline">                                     
+                                        <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Salvar</button>
+                                    </form>
+                                    <a href="/metas/delete/<%= meta.id %>" class="text-red-600 hover:text-red-800">Excluir</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <div class="p-6 text-gray-500">Nenhum meta encontrado.</div>
+            <% } %>
+        </div>
+    </main>
+</body>
+</html>

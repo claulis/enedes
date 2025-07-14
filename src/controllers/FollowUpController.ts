@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import { FollowUpModel, FollowUp } from '../models/FollowUps';
-import { FollowUpAttachmentModel } from '../models/FolloUpAttachments'; // Fixed typo
+import { FollowUpAttachmentModel } from '../models/FolloUpAttachments';
 import { ActionModel } from '../models/Actions';
 import { CollaboratorModel } from '../models/Collaborators';
 import { User } from '../models/Users';
 import { upload } from '../config/filestorage';
-import path from 'path';
+import { db } from '../app';
+import { RowDataPacket } from 'mysql2/promise';
 
 declare module 'express-session' {
     interface SessionData {
@@ -13,7 +14,157 @@ declare module 'express-session' {
     }
 }
 
+interface ActionRow extends RowDataPacket {
+    id: number;
+    name: string;
+}
+
+interface CollaboratorRow extends RowDataPacket {
+    id: number;
+    name: string;
+}
+
+interface FollowUpRow extends RowDataPacket {
+    id: number;
+    title: string;
+    description: string;
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+    priority: 'low' | 'medium' | 'high';
+    start_date: string | null;
+    end_date: string;
+    created_at: string;
+    action_id: number;
+    assigned_to: number; // Added to match view
+    action_name: string;
+    section_name: string;
+    collaborator_name: string;
+    collaborator_email: string;
+    created_by_name: string;
+    days_until_deadline: number;
+}
+
+interface CountRow extends RowDataPacket {
+    total: number;
+}
+
+interface SectionRow extends RowDataPacket {
+    section_id: number;
+}
+
 export class FollowUpController {
+    static async getFollowUps(req: Request, res: Response) {
+        const user: User | undefined = req.session.user;
+        if (!user) {
+            return res.redirect('/');
+        }
+
+        const { action_id, assigned_to, search = '', sort = 'created_at', order = 'DESC', page = '1' } = req.query;
+        const pageSize = 10;
+        const offset = (parseInt(page as string) - 1) * pageSize;
+        const validSortColumns = ['id', 'title', 'status', 'priority', 'start_date', 'end_date', 'created_at', 'action_name', 'collaborator_name'];
+        const sortColumn = validSortColumns.includes(sort as string) ? sort : 'created_at';
+        const sortOrder = order === 'ASC' ? 'ASC' : 'DESC';
+        const searchTerm = `%${search}%`;
+
+        try {
+            // Fetch actions and collaborators for filter dropdowns
+            const [actions] = await db.query<ActionRow[]>('SELECT id, task AS name FROM actions WHERE status != "concluida"');
+            const [collaborators] = await db.query<CollaboratorRow[]>('SELECT id, name FROM collaborators WHERE is_active = 1');
+
+            // Build query with filters
+            let query = `
+                SELECT * FROM follow_ups_detailed2
+                WHERE title LIKE ? OR description LIKE ?
+            `;
+            const queryParams: any[] = [searchTerm, searchTerm];
+
+            if (action_id && !isNaN(parseInt(action_id as string))) {
+                query += ' AND action_id = ?';
+                queryParams.push(parseInt(action_id as string));
+            }
+            if (assigned_to && !isNaN(parseInt(assigned_to as string))) {
+                query += ' AND assigned_to = ?';
+                queryParams.push(parseInt(assigned_to as string));
+            }
+
+            // Apply user role/section restrictions
+            if (user.role !== 'general_coordinator' && user.role !== 'project_coordinator') {
+                const [userSections] = await db.query<SectionRow[]>('SELECT section_id FROM user_sections WHERE user_id = ?', [user.id]);
+                const sectionIds = userSections.map((s) => s.section_id);
+                if (sectionIds.length > 0) {
+                    query += ` AND section_id IN (${sectionIds.map(() => '?').join(',')})`;
+                    queryParams.push(...sectionIds);
+                } else {
+                    query += ' AND 1=0'; // No access if no sections assigned
+                }
+            }
+
+            query += ` ORDER BY ${sortColumn} ${sortOrder} LIMIT ? OFFSET ?`;
+            queryParams.push(pageSize, offset);
+
+            // Fetch follow-ups
+            const [followUps] = await db.query<FollowUpRow[]>(query, queryParams);
+
+            // Get total count for pagination
+            let countQuery = 'SELECT COUNT(*) as total FROM follow_ups_detailed2 WHERE title LIKE ? OR description LIKE ?';
+            const countParams: any[] = [searchTerm, searchTerm];
+            if (action_id && !isNaN(parseInt(action_id as string))) {
+                countQuery += ' AND action_id = ?';
+                countParams.push(parseInt(action_id as string));
+            }
+            if (assigned_to && !isNaN(parseInt(assigned_to as string))) {
+                countQuery += ' AND assigned_to = ?';
+                countParams.push(parseInt(assigned_to as string));
+            }
+            if (user.role !== 'general_coordinator' && user.role !== 'project_coordinator') {
+                const [userSections] = await db.query<SectionRow[]>('SELECT section_id FROM user_sections WHERE user_id = ?', [user.id]);
+                const sectionIds = userSections.map((s) => s.section_id);
+                if (sectionIds.length > 0) {
+                    countQuery += ` AND section_id IN (${sectionIds.map(() => '?').join(',')})`;
+                    countParams.push(...sectionIds);
+                } else {
+                    countQuery += ' AND 1=0';
+                }
+            }
+            const [countResult] = await db.query<CountRow[]>(countQuery, countParams);
+            const totalItems = countResult[0]?.total || 0;
+            const totalPages = Math.ceil(totalItems / pageSize);
+
+            res.render('follow-ups', {
+                user,
+                followUps,
+                actions,
+                collaborators,
+                action_id: action_id || '',
+                assigned_to: assigned_to || '',
+                search,
+                sort,
+                order,
+                page: parseInt(page as string) || 1,
+                totalPages,
+                totalItems,
+                error: null
+            });
+        } catch (error) {
+            console.error('Error fetching follow-ups:', error);
+            res.render('follow-ups', {
+                user,
+                followUps: [],
+                actions: [],
+                collaborators: [],
+                action_id: action_id || '',
+                assigned_to: assigned_to || '',
+                search,
+                sort,
+                order,
+                page: 1,
+                totalPages: 1,
+                totalItems: 0,
+                error: 'Erro ao carregar follow-ups. Verifique a conexão com o banco de dados ou os filtros aplicados.'
+            });
+        }
+    }
+
     static async getNewFollowUp(req: Request, res: Response) {
         const user: User | undefined = req.session.user;
         if (!user) {
@@ -21,10 +172,14 @@ export class FollowUpController {
         }
 
         const actionId = parseInt(req.params.actionId);
+        if (isNaN(actionId)) {
+            return res.render('follow-up-form', { user, action: null, collaborators: [], error: 'ID da ação inválido.' });
+        }
+
         try {
             const action = await ActionModel.findById(actionId);
             if (!action || (user.role !== 'general_coordinator' && user.role !== 'project_coordinator' && !user.sections.includes(action.section_name!))) {
-                return res.render('follow-up-form', { user, action: null, collaborators: [], error: 'Acesso não autorizado.' });
+                return res.render('follow-up-form', { user, action: null, collaborators: [], error: 'Acesso não autorizado ou ação não encontrada.' });
             }
             const collaborators = await CollaboratorModel.findAll();
             res.render('follow-up-form', { user, action, collaborators, followUp: null, attachments: [], error: null });
@@ -44,7 +199,7 @@ export class FollowUpController {
             if (err) {
                 console.error('Error uploading files:', err.message);
                 const actionId = parseInt(req.body.action_id);
-                const action = await ActionModel.findById(actionId);
+                const action = isNaN(actionId) ? null : await ActionModel.findById(actionId);
                 const collaborators = await CollaboratorModel.findAll();
                 return res.render('follow-up-form', {
                     user,
@@ -65,9 +220,15 @@ export class FollowUpController {
                     throw new Error('Campos obrigatórios não preenchidos.');
                 }
 
+                const actionId = parseInt(action_id);
+                const assignedToId = parseInt(assigned_to);
+                if (isNaN(actionId) || isNaN(assignedToId)) {
+                    throw new Error('ID da ação ou colaborador inválido.');
+                }
+
                 const followUp: Partial<FollowUp> = {
-                    action_id: parseInt(action_id),
-                    assigned_to: parseInt(assigned_to),
+                    action_id: actionId,
+                    assigned_to: assignedToId,
                     created_by: user.id,
                     title,
                     description,
@@ -101,7 +262,7 @@ export class FollowUpController {
             } catch (error: any) {
                 console.error('Error creating follow-up:', error.message);
                 const actionId = parseInt(action_id);
-                const action = await ActionModel.findById(actionId);
+                const action = isNaN(actionId) ? null : await ActionModel.findById(actionId);
                 const collaborators = await CollaboratorModel.findAll();
                 res.render('follow-up-form', {
                     user,
@@ -122,12 +283,19 @@ export class FollowUpController {
         }
 
         const followUpId = parseInt(req.params.id);
+        if (isNaN(followUpId)) {
+            return res.render('follow-up-form', { user, action: null, collaborators: [], followUp: null, attachments: [], error: 'ID do follow-up inválido.' });
+        }
+
         try {
             const followUp = await FollowUpModel.findById(followUpId);
             if (!followUp) {
                 return res.render('follow-up-form', { user, action: null, collaborators: [], followUp: null, attachments: [], error: 'Follow-up não encontrado.' });
             }
             const action = await ActionModel.findById(followUp.action_id);
+            if (!action) {
+                return res.render('follow-up-form', { user, action: null, collaborators: [], followUp, attachments: [], error: 'Ação associada não encontrada.' });
+            }
             const collaborators = await CollaboratorModel.findAll();
             const attachments = await FollowUpAttachmentModel.findByFollowUpId(followUpId);
             res.render('follow-up-form', { user, action, collaborators, followUp, attachments, error: null });
@@ -147,7 +315,7 @@ export class FollowUpController {
             if (err) {
                 console.error('Error uploading files:', err.message);
                 const followUpId = parseInt(req.params.id);
-                const followUp = await FollowUpModel.findById(followUpId);
+                const followUp = isNaN(followUpId) ? null : await FollowUpModel.findById(followUpId);
                 const action = followUp ? await ActionModel.findById(followUp.action_id) : null;
                 const collaborators = await CollaboratorModel.findAll();
                 const attachments = followUp ? await FollowUpAttachmentModel.findByFollowUpId(followUpId) : [];
@@ -171,9 +339,15 @@ export class FollowUpController {
                     throw new Error('Campos obrigatórios não preenchidos.');
                 }
 
+                const actionId = parseInt(action_id);
+                const assignedToId = parseInt(assigned_to);
+                if (isNaN(actionId) || isNaN(assignedToId)) {
+                    throw new Error('ID da ação ou colaborador inválido.');
+                }
+
                 const followUp: Partial<FollowUp> = {
-                    action_id: parseInt(action_id),
-                    assigned_to: parseInt(assigned_to),
+                    action_id: actionId,
+                    assigned_to: assignedToId,
                     title,
                     description,
                     next_steps: next_steps || null,
@@ -228,6 +402,10 @@ export class FollowUpController {
         }
 
         const followUpId = parseInt(req.params.id);
+        if (isNaN(followUpId)) {
+            return res.redirect('/dashboard');
+        }
+
         try {
             const followUp = await FollowUpModel.findById(followUpId);
             if (!followUp) {
@@ -252,6 +430,10 @@ export class FollowUpController {
         }
 
         const followUpId = parseInt(req.params.id);
+        if (isNaN(followUpId)) {
+            return res.render('follow-up-view', { user, followUp: null, action: null, collaborator: null, attachments: [], error: 'ID do follow-up inválido.' });
+        }
+
         try {
             const followUp = await FollowUpModel.findById(followUpId);
             if (!followUp) {
