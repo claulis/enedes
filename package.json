@@ -2,8 +2,9 @@
     "name": "sistema-enedes",
     "version": "1.0.0",
     "scripts": {
-        "start": "nodemon src/app.ts",
-        "build": "tsc"
+        "start dev": "nodemon src/app.ts",
+        "build": "tsc",
+        "start": "node src/app.ts"        
     },
     "dependencies": {
         "bcrypt": "^5.1.1",
