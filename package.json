@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "scripts": {
         "start dev": "nodemon src/app.ts",
+        "build2": "tsc && copyfiles -u 1 src/views/**/* dist/src && copyfiles -u 1 public/**/* dist/src",
         "build": "tsc",
         "start": "node dist/src/app.js"
     },
